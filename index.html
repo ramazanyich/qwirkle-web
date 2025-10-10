@@ -444,8 +444,14 @@
     function renderTile(tile, options = {}) {
       // Safety check: ensure tile has required properties
       if (!tile || !tile.shape || !tile.color) {
-        console.error('Invalid tile object:', tile);
+        alert('ERROR: Invalid tile - shape:' + (tile?.shape || 'missing') + ' color:' + (tile?.color || 'missing'));
         return document.createElement('div');
+      }
+      
+      // Debug cross tiles with alert
+      if (tile.shape === 'cross') {
+        const colorInMap = COLOR_MAP[tile.color];
+        alert('CROSS TILE DEBUG:\nShape: ' + tile.shape + '\nColor: ' + tile.color + '\nColor in map: ' + (colorInMap || 'NOT FOUND') + '\nFull tile: ' + JSON.stringify(tile));
       }
       
       const div = document.createElement('div');
@@ -455,8 +461,8 @@
       // Ensure color is valid and exists in COLOR_MAP
       const tileColor = COLOR_MAP[tile.color];
       if (!tileColor) {
-        console.error('Unknown tile color:', tile.color, 'for tile:', tile);
-        div.style.color = '#000000'; // Fallback to black
+        alert('ERROR: Unknown tile color "' + tile.color + '" for tile ' + JSON.stringify(tile) + '\nAvailable colors: ' + Object.keys(COLOR_MAP).join(', '));
+        div.style.color = '#cccccc'; // Gray fallback to make it visible
       } else {
         div.style.color = tileColor;
       }
@@ -464,7 +470,7 @@
       // Ensure shape icon exists
       const shapeIcon = SHAPE_ICONS[tile.shape];
       if (!shapeIcon) {
-        console.error('Unknown tile shape:', tile.shape, 'for tile:', tile);
+        alert('ERROR: Unknown tile shape "' + tile.shape + '"');
         div.textContent = '?';
       } else {
         div.textContent = shapeIcon;
@@ -573,6 +579,17 @@
         const data = snapshot.val();
         if (data) {
           console.log('Game state updated, status:', data.status);
+          
+          // DEBUG: Log board data received from Firebase
+          if (data.board) {
+            console.log('Board data received:', data.board);
+            Object.entries(data.board).forEach(([pos, tile]) => {
+              if (tile.shape === 'cross') {
+                console.log('Cross tile at', pos, ':', JSON.stringify(tile));
+              }
+            });
+          }
+          
           state.gameState = data;
           
           // Automatically transition to game screen when status changes to playing
