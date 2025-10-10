@@ -223,7 +223,7 @@
       }
       
       try {
-        const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
         state.playerId = newPlayerId;
         localStorage.setItem('qwirklePlayerId', newPlayerId);
 
@@ -264,7 +264,7 @@
       }
       
       try {
-        const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
         state.playerId = newPlayerId;
         localStorage.setItem('qwirklePlayerId', newPlayerId);
 
