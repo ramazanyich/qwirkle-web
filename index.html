@@ -311,8 +311,14 @@
       db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          console.log('Game state updated');
+          console.log('Game state updated, status:', data.status);
           state.gameState = data;
+          
+          // Automatically transition to game screen when status changes to playing
+          if (data.status === 'playing' && state.screen !== 'game') {
+            state.screen = 'game';
+          }
+          
           render();
         }
       });
@@ -320,9 +326,12 @@
 
     async function startGame() {
       try {
+        console.log('Starting game...');
         await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
+        console.log('Game status updated to playing');
         state.screen = 'game';
-        render();
+        // Don't render immediately - let Firebase listener update the state first
+        // render() will be called automatically by the listener
       } catch (error) {
         console.error('Error starting game:', error);
         alert('Error starting game: ' + error.message);
