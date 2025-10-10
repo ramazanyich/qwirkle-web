@@ -456,7 +456,22 @@
             report += `Hand tile:\n  Color: ${tile.color}\n  Expected: ${expectedColor}\n\n`;
           }
         });
-        report += `Total clovers in hand: ${handCloverCount}`;
+        report += `Total clovers in hand: ${handCloverCount}\n\n`;
+        
+        // Now check the actual rendered tiles
+        report += '--- CHECKING ACTUAL RENDERED COLORS ---\n\n';
+        const handDiv = document.getElementById('hand');
+        if (handDiv) {
+          const tiles = handDiv.querySelectorAll('.tile');
+          tiles.forEach((tileEl, idx) => {
+            const content = tileEl.textContent;
+            if (content === '♣') {
+              const computedColor = window.getComputedStyle(tileEl).color;
+              const inlineColor = tileEl.style.color;
+              report += `Rendered clover #${idx}:\n  Inline style: ${inlineColor}\n  Computed color: ${computedColor}\n\n`;
+            }
+          });
+        }
       }
       
       alert(report);
