@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Qwirkle Online</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
@@ -96,17 +94,60 @@
       margin-bottom: 20px;
       font-weight: bold;
     }
+    .error-msg {
+      background: #e74c3c;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div id="app">
-      <h1 style="text-align: center;">🎮 Qwirkle Online</h1>
-      <p style="text-align: center; color: #7f8c8d;">Loading game...</p>
+      <div class="loading">
+        <h1>🎮 Qwirkle Online</h1>
+        <p>Loading Firebase...</p>
+        <p style="font-size: 14px; margin-top: 10px;">If this takes more than 5 seconds, check your internet connection.</p>
+      </div>
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script>
+    console.log('Script starting...');
+    
+    // Check if Firebase loaded
+    if (typeof firebase === 'undefined') {
+      document.getElementById('app').innerHTML = `
+        <div class="error-msg">
+          <h2>Error: Firebase Failed to Load</h2>
+          <p>The Firebase library couldn't load. This might be due to:</p>
+          <ul>
+            <li>Poor internet connection</li>
+            <li>Firewall or ad-blocker blocking scripts</li>
+            <li>Browser security settings</li>
+          </ul>
+          <p style="margin-top: 10px;">Try:</p>
+          <ul>
+            <li>Refreshing the page</li>
+            <li>Disabling ad-blockers</li>
+            <li>Using a different browser</li>
+          </ul>
+        </div>
+      `;
+      throw new Error('Firebase not loaded');
+    }
+
+    console.log('Firebase loaded successfully');
+
     const firebaseConfig = {
       apiKey: "AIzaSyBZvdbCflscZGDpV62zlycN6kEHOPnGjoE",
       authDomain: "qwirkle-5ebab.firebaseapp.com",
@@ -117,8 +158,22 @@
       appId: "1:333453624833:web:b679c5899f384818ce2200"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    let db;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      console.log('Firebase initialized successfully');
+    } catch (error) {
+      console.error('Firebase initialization error:', error);
+      document.getElementById('app').innerHTML = `
+        <div class="error-msg">
+          <h2>Firebase Initialization Error</h2>
+          <p>${error.message}</p>
+          <p>Please refresh the page and try again.</p>
+        </div>
+      `;
+      throw error;
+    }
 
     const SHAPES = ['circle', 'square', 'diamond', 'star', 'cross', 'clover'];
     const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
@@ -160,67 +215,103 @@
     }
 
     async function createGame() {
-      if (!state.playerName.trim()) return;
+      console.log('Create game clicked, playerName:', state.playerName);
       
-      const newPlayerId = `player_${Date.now()}_${Math.random()}`;
-      state.playerId = newPlayerId;
-      localStorage.setItem('qwirklePlayerId', newPlayerId);
+      if (!state.playerName.trim()) {
+        alert('Please enter your name!');
+        return;
+      }
+      
+      try {
+        const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+        state.playerId = newPlayerId;
+        localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-      const deck = createDeck();
-      const player1Hand = deck.splice(0, 6);
-      
-      const newGameRef = db.ref('games').push();
-      const newGameId = newGameRef.key;
-      
-      await newGameRef.set({
-        players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
-        deck: deck,
-        board: {},
-        currentPlayerIndex: 0,
-        playerOrder: [newPlayerId],
-        status: 'waiting',
-        createdAt: Date.now()
-      });
+        const deck = createDeck();
+        const player1Hand = deck.splice(0, 6);
+        
+        console.log('Creating new game in Firebase...');
+        const newGameRef = db.ref('games').push();
+        const newGameId = newGameRef.key;
+        
+        await newGameRef.set({
+          players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
+          deck: deck,
+          board: {},
+          currentPlayerIndex: 0,
+          playerOrder: [newPlayerId],
+          status: 'waiting',
+          createdAt: Date.now()
+        });
 
-      state.gameId = newGameId;
-      state.screen = 'lobby';
-      render();
-      listenToGame();
+        console.log('Game created successfully with ID:', newGameId);
+        state.gameId = newGameId;
+        state.screen = 'lobby';
+        render();
+        listenToGame();
+      } catch (error) {
+        console.error('Error creating game:', error);
+        alert('Error creating game: ' + error.message);
+      }
     }
 
     async function joinGame() {
-      if (!state.playerName.trim() || !state.gameId.trim()) return;
+      console.log('Join game clicked');
       
-      const newPlayerId = `player_${Date.now()}_${Math.random()}`;
-      state.playerId = newPlayerId;
-      localStorage.setItem('qwirklePlayerId', newPlayerId);
-
-      const snapshot = await db.ref(`games/${state.gameId}`).once('value');
-      const game = snapshot.val();
+      if (!state.playerName.trim() || !state.gameId.trim()) {
+        alert('Please enter your name and game ID!');
+        return;
+      }
       
-      if (!game) { alert('Game not found!'); return; }
-      if (game.status !== 'waiting') { alert('Game already started!'); return; }
-      if (Object.keys(game.players).length >= 4) { alert('Game is full!'); return; }
+      try {
+        const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+        state.playerId = newPlayerId;
+        localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-      const deck = [...game.deck];
-      const hand = deck.splice(0, 6);
-      const playerCount = Object.keys(game.players).length;
-      
-      await db.ref(`games/${state.gameId}`).update({
-        [`players/${newPlayerId}`]: { name: state.playerName, hand, score: 0, order: playerCount },
-        deck,
-        playerOrder: [...game.playerOrder, newPlayerId]
-      });
+        console.log('Fetching game:', state.gameId);
+        const snapshot = await db.ref(`games/${state.gameId}`).once('value');
+        const game = snapshot.val();
+        
+        if (!game) { 
+          alert('Game not found! Check the Game ID and try again.'); 
+          return; 
+        }
+        if (game.status !== 'waiting') { 
+          alert('Game already started!'); 
+          return; 
+        }
+        if (Object.keys(game.players).length >= 4) { 
+          alert('Game is full!'); 
+          return; 
+        }
 
-      state.screen = 'lobby';
-      render();
-      listenToGame();
+        const deck = [...game.deck];
+        const hand = deck.splice(0, 6);
+        const playerCount = Object.keys(game.players).length;
+        
+        console.log('Joining game...');
+        await db.ref(`games/${state.gameId}`).update({
+          [`players/${newPlayerId}`]: { name: state.playerName, hand, score: 0, order: playerCount },
+          deck,
+          playerOrder: [...game.playerOrder, newPlayerId]
+        });
+
+        console.log('Joined successfully');
+        state.screen = 'lobby';
+        render();
+        listenToGame();
+      } catch (error) {
+        console.error('Error joining game:', error);
+        alert('Error joining game: ' + error.message);
+      }
     }
 
     function listenToGame() {
+      console.log('Starting to listen to game updates');
       db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
+          console.log('Game state updated');
           state.gameState = data;
           render();
         }
@@ -228,9 +319,14 @@
     }
 
     async function startGame() {
-      await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
-      state.screen = 'game';
-      render();
+      try {
+        await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
+        state.screen = 'game';
+        render();
+      } catch (error) {
+        console.error('Error starting game:', error);
+        alert('Error starting game: ' + error.message);
+      }
     }
 
     function validatePlacement(placements, board) {
@@ -433,6 +529,7 @@
     }
 
     function render() {
+      console.log('Rendering screen:', state.screen);
       const app = document.getElementById('app');
       app.innerHTML = '';
 
@@ -447,10 +544,30 @@
             <button class="btn-blue" id="joinBtn">Join Game</button>
           </div>
         `;
-        document.getElementById('playerName').oninput = (e) => state.playerName = e.target.value;
-        document.getElementById('gameIdInput').oninput = (e) => state.gameId = e.target.value;
-        document.getElementById('createBtn').onclick = createGame;
-        document.getElementById('joinBtn').onclick = joinGame;
+        
+        const nameInput = document.getElementById('playerName');
+        const gameInput = document.getElementById('gameIdInput');
+        const createBtn = document.getElementById('createBtn');
+        const joinBtn = document.getElementById('joinBtn');
+        
+        nameInput.oninput = (e) => {
+          state.playerName = e.target.value;
+          console.log('Player name updated:', state.playerName);
+        };
+        gameInput.oninput = (e) => {
+          state.gameId = e.target.value;
+          console.log('Game ID updated:', state.gameId);
+        };
+        createBtn.onclick = () => {
+          console.log('Create button clicked');
+          createGame();
+        };
+        joinBtn.onclick = () => {
+          console.log('Join button clicked');
+          joinGame();
+        };
+        
+        console.log('Menu rendered, buttons attached');
       }
 
       else if (state.screen === 'lobby' && state.gameState) {
@@ -607,9 +724,13 @@
       }
     }
 
-    setTimeout(() => {
-      render();
-    }, 500);
+    // Wait for scripts to load, then render
+    window.addEventListener('load', () => {
+      console.log('Window loaded, rendering menu');
+      setTimeout(() => {
+        render();
+      }, 100);
+    });
   </script>
 </body>
 </html>
