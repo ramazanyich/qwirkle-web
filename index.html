@@ -477,42 +477,17 @@
     }
 
     function renderTile(tile, options = {}) {
-      // Safety check: ensure tile has required properties
-      if (!tile || !tile.shape || !tile.color) {
-        console.error('Invalid tile - shape:', tile?.shape, 'color:', tile?.color);
-        return document.createElement('div');
-      }
-      
       const div = document.createElement('div');
       div.className = 'tile' + (options.selected ? ' selected' : '');
       div.draggable = options.draggable || false;
-      
-      // Ensure color is valid and exists in COLOR_MAP
-      const tileColor = COLOR_MAP[tile.color];
-      if (!tileColor) {
-        console.error('Unknown tile color:', tile.color, 'Available:', Object.keys(COLOR_MAP));
-        div.style.color = '#cccccc'; // Gray fallback
-      } else {
-        div.style.color = tileColor;
-      }
-      
-      // Ensure shape icon exists
-      const shapeIcon = SHAPE_ICONS[tile.shape];
-      if (!shapeIcon) {
-        console.error('Unknown tile shape:', tile.shape);
-        div.textContent = '?';
-      } else {
-        div.textContent = shapeIcon;
-      }
-      
+      div.style.color = COLOR_MAP[tile.color];
+      div.textContent = SHAPE_ICONS[tile.shape];
       if (options.onClick) div.onclick = options.onClick;
       if (options.onDragStart) div.ondragstart = options.onDragStart;
       return div;
     }
 
     async function createGame() {
-      console.log('Create game clicked, playerName:', state.playerName);
-      
       if (!state.playerName.trim()) {
         alert(t('enterName'));
         return;
@@ -526,7 +501,6 @@
         const deck = createDeck();
         const player1Hand = deck.splice(0, 6);
         
-        console.log('Creating new game in Firebase...');
         const newGameRef = db.ref('games').push();
         const newGameId = newGameRef.key;
         
@@ -540,7 +514,6 @@
           createdAt: Date.now()
         });
 
-        console.log('Game created successfully with ID:', newGameId);
         state.gameId = newGameId;
         state.screen = 'lobby';
         render();
@@ -552,8 +525,6 @@
     }
 
     async function joinGame() {
-      console.log('Join game clicked');
-      
       if (!state.playerName.trim() || !state.gameId.trim()) {
         alert(t('enterNameAndId'));
         return;
@@ -564,7 +535,6 @@
         state.playerId = newPlayerId;
         localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-        console.log('Fetching game:', state.gameId);
         const snapshot = await db.ref(`games/${state.gameId}`).once('value');
         const game = snapshot.val();
         
@@ -585,14 +555,12 @@
         const hand = deck.splice(0, 6);
         const playerCount = Object.keys(game.players).length;
         
-        console.log('Joining game...');
         await db.ref(`games/${state.gameId}`).update({
           [`players/${newPlayerId}`]: { name: state.playerName, hand, score: 0, order: playerCount },
           deck,
           playerOrder: [...game.playerOrder, newPlayerId]
         });
 
-        console.log('Joined successfully');
         state.screen = 'lobby';
         render();
         listenToGame();
@@ -603,25 +571,11 @@
     }
 
     function listenToGame() {
-      console.log('Starting to listen to game updates');
       db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          console.log('Game state updated, status:', data.status);
-          
-          // DEBUG: Log board data received from Firebase
-          if (data.board) {
-            console.log('Board data received:', data.board);
-            Object.entries(data.board).forEach(([pos, tile]) => {
-              if (tile.shape === 'cross') {
-                console.log('Cross tile at', pos, ':', JSON.stringify(tile));
-              }
-            });
-          }
-          
           state.gameState = data;
           
-          // Automatically transition to game screen when status changes to playing
           if (data.status === 'playing' && state.screen !== 'game') {
             state.screen = 'game';
           }
@@ -633,14 +587,9 @@
 
     async function startGame() {
       try {
-        console.log('Starting game...');
         await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
-        console.log('Game status updated to playing');
         state.screen = 'game';
-        // Don't render immediately - let Firebase listener update the state first
-        // render() will be called automatically by the listener
       } catch (error) {
-        console.error('Error starting game:', error);
         alert(t('errorStarting') + ': ' + error.message);
       }
     }
@@ -851,7 +800,6 @@
     }
 
     function render() {
-      console.log('Rendering screen:', state.screen);
       const app = document.getElementById('app');
       app.innerHTML = '';
 
@@ -881,27 +829,11 @@
         
         window.toggleLanguage = toggleLanguage;
         
-        nameInput.oninput = (e) => {
-          state.playerName = e.target.value;
-          console.log('Player name updated:', state.playerName);
-        };
-        gameInput.oninput = (e) => {
-          state.gameId = e.target.value;
-          console.log('Game ID updated:', state.gameId);
-        };
-        createBtn.onclick = () => {
-          console.log('Create button clicked');
-          createGame();
-        };
-        joinBtn.onclick = () => {
-          console.log('Join button clicked');
-          joinGame();
-        };
-        rulesBtn.onclick = () => {
-          showRules();
-        };
-        
-        console.log('Menu rendered, buttons attached');
+        nameInput.oninput = (e) => state.playerName = e.target.value;
+        gameInput.oninput = (e) => state.gameId = e.target.value;
+        createBtn.onclick = createGame;
+        joinBtn.onclick = joinGame;
+        rulesBtn.onclick = showRules;
       }
 
       else if (state.screen === 'lobby' && state.gameState) {
@@ -935,17 +867,12 @@
       }
 
       else if (state.screen === 'game' && state.gameState) {
-        console.log('Rendering game screen');
         const currentPlayer = state.gameState.players[state.playerId];
         
         if (!currentPlayer) {
-          console.error('Current player not found! PlayerID:', state.playerId);
-          console.error('Available players:', Object.keys(state.gameState.players));
           app.innerHTML = `<div class="error-msg"><h2>${t('firebaseInitError')}</h2><p>${t('playerNotFound')}</p></div>`;
           return;
         }
-        
-        console.log('Current player found:', currentPlayer.name);
         
         const isMyTurn = state.gameState.playerOrder[state.gameState.currentPlayerIndex] === state.playerId;
         const currentTurnPlayer = state.gameState.players[state.gameState.playerOrder[state.gameState.currentPlayerIndex]];
@@ -964,8 +891,6 @@
           });
           minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
         }
-        
-        console.log('Board dimensions:', minRow, maxRow, minCol, maxCol);
 
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
@@ -1022,17 +947,6 @@
 
         console.log('Creating board...');
         const boardDiv = document.getElementById('board');
-        if (!boardDiv) {
-          console.error('Board div not found!');
-          return;
-        }
-        
-        // Debug: Log board state
-        console.log('Rendering board with tiles:', Object.keys(board).length);
-        if (Object.keys(board).length > 0) {
-          console.log('Sample board tile:', Object.values(board)[0]);
-        }
-        
         for (let row = minRow; row <= maxRow; row++) {
           const rowDiv = document.createElement('div');
           rowDiv.className = 'board-row';
