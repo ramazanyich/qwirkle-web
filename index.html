@@ -610,26 +610,44 @@
       }
 
       else if (state.screen === 'game' && state.gameState) {
+        console.log('Rendering game screen');
         const currentPlayer = state.gameState.players[state.playerId];
+        
+        if (!currentPlayer) {
+          console.error('Current player not found! PlayerID:', state.playerId);
+          console.error('Available players:', Object.keys(state.gameState.players));
+          app.innerHTML = '<div class="error-msg"><h2>Error</h2><p>Player data not found. Please refresh the page.</p></div>';
+          return;
+        }
+        
+        console.log('Current player found:', currentPlayer.name);
+        
         const isMyTurn = state.gameState.playerOrder[state.gameState.currentPlayerIndex] === state.playerId;
         const currentTurnPlayer = state.gameState.players[state.gameState.playerOrder[state.gameState.currentPlayerIndex]];
 
-        let minRow = 0, maxRow = 0, minCol = 0, maxCol = 0;
-        Object.keys(state.gameState.board).forEach(key => {
-          const [r, c] = key.split(',').map(Number);
-          minRow = Math.min(minRow, r);
-          maxRow = Math.max(maxRow, r);
-          minCol = Math.min(minCol, c);
-          maxCol = Math.max(maxCol, c);
-        });
-        minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
+        let minRow = -2, maxRow = 2, minCol = -2, maxCol = 2;
+        const board = state.gameState.board || {};
+        
+        if (Object.keys(board).length > 0) {
+          minRow = 0; maxRow = 0; minCol = 0; maxCol = 0;
+          Object.keys(board).forEach(key => {
+            const [r, c] = key.split(',').map(Number);
+            minRow = Math.min(minRow, r);
+            maxRow = Math.max(maxRow, r);
+            minCol = Math.min(minCol, c);
+            maxCol = Math.max(maxCol, c);
+          });
+          minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
+        }
+        
+        console.log('Board dimensions:', minRow, maxRow, minCol, maxCol);
 
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
             <h2>Qwirkle Game</h2>
             <div><strong>Game ID:</strong> ${state.gameId} | <strong>Bag:</strong> ${state.gameState.deck.length} tiles</div>
           </div>
-          <div id="scores"></div>
+          <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
           ${state.gameState.status === 'finished' ? `
             <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
               <strong>Game Over!</strong> Winner: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
@@ -639,11 +657,13 @@
               ${isMyTurn ? "Your turn!" : `${currentTurnPlayer.name}'s turn`}
             </div>
           `}
-          <div class="board-container"><div style="display: inline-block; padding: 20px;" id="board"></div></div>
+          <div class="board-container">
+            <div style="display: inline-block; padding: 20px;" id="board"></div>
+          </div>
           <h3>Your Hand:</h3>
           <div class="hand-container" id="hand"></div>
           ${isMyTurn && state.gameState.status === 'playing' ? `
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
               <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Play Tiles</button>
               <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Cancel</button>
               <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>Swap Selected (${state.selectedTiles.length})</button>
@@ -651,7 +671,12 @@
           ` : ''}
         `;
 
+        console.log('HTML structure created, populating scores...');
         const scoresDiv = document.getElementById('scores');
+        if (!scoresDiv) {
+          console.error('Scores div not found!');
+          return;
+        }
         state.gameState.playerOrder.forEach((pid, idx) => {
           const p = state.gameState.players[pid];
           const isCurrent = idx === state.gameState.currentPlayerIndex;
@@ -663,14 +688,20 @@
           card.textContent = `${p.name}: ${p.score} pts${isCurrent ? ' 🎯' : ''}`;
           scoresDiv.appendChild(card);
         });
+        console.log('Scores populated');
 
+        console.log('Creating board...');
         const boardDiv = document.getElementById('board');
+        if (!boardDiv) {
+          console.error('Board div not found!');
+          return;
+        }
         for (let row = minRow; row <= maxRow; row++) {
           const rowDiv = document.createElement('div');
           rowDiv.className = 'board-row';
           for (let col = minCol; col <= maxCol; col++) {
             const key = `${row},${col}`;
-            const tile = state.gameState.board[key];
+            const tile = board[key];
             const pending = state.pendingPlacements.find(p => p.row === row && p.col === col);
             
             const cell = document.createElement('div');
@@ -702,25 +733,34 @@
           }
           boardDiv.appendChild(rowDiv);
         }
+        console.log('Board created');
 
+        console.log('Creating hand with', currentPlayer.hand ? currentPlayer.hand.length : 0, 'tiles');
         const handDiv = document.getElementById('hand');
-        currentPlayer.hand.forEach(tile => {
-          const isSelected = state.selectedTiles.find(t => t.id === tile.id);
-          const tileEl = renderTile(tile, {
-            draggable: true,
-            selected: isSelected,
-            onDragStart: () => { state.draggedTile = tile; },
-            onClick: () => {
-              if (isSelected) {
-                state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
-              } else {
-                state.selectedTiles.push(tile);
+        if (!handDiv) {
+          console.error('Hand div not found!');
+          return;
+        }
+        if (currentPlayer.hand && Array.isArray(currentPlayer.hand)) {
+          currentPlayer.hand.forEach(tile => {
+            const isSelected = state.selectedTiles.find(t => t.id === tile.id);
+            const tileEl = renderTile(tile, {
+              draggable: true,
+              selected: isSelected,
+              onDragStart: () => { state.draggedTile = tile; },
+              onClick: () => {
+                if (isSelected) {
+                  state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
+                } else {
+                  state.selectedTiles.push(tile);
+                }
+                render();
               }
-              render();
-            }
+            });
+            handDiv.appendChild(tileEl);
           });
-          handDiv.appendChild(tileEl);
-        });
+        }
+        console.log('Hand populated');
 
         if (isMyTurn && state.gameState.status === 'playing') {
           const playBtn = document.getElementById('playBtn');
@@ -729,7 +769,10 @@
           if (playBtn) playBtn.onclick = playTiles;
           if (cancelBtn) cancelBtn.onclick = () => { state.pendingPlacements = []; render(); };
           if (swapBtn) swapBtn.onclick = swapTiles;
+          console.log('Action buttons attached');
         }
+        
+        console.log('Game screen render complete!');
       }
     }
 
