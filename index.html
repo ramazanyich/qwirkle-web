@@ -736,40 +736,60 @@
     async function playTiles() {
       if (state.pendingPlacements.length === 0) return;
 
-      const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
-      if (!validation.valid) { alert(validation.reason); return; }
+      try {
+        const currentBoard = state.gameState.board || {};
+        
+        const validation = validatePlacement(state.pendingPlacements, currentBoard);
+        
+        if (!validation.valid) { 
+          alert(validation.reason); 
+          return; 
+        }
 
-      const newBoard = { ...state.gameState.board };
-      state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
+        const newBoard = { ...currentBoard };
+        state.pendingPlacements.forEach(p => { 
+          const tileToStore = {
+            shape: p.tile.shape,
+            color: p.tile.color,
+            id: p.tile.id
+          };
+          newBoard[`${p.row},${p.col}`] = tileToStore;
+        });
 
-      const currentPlayer = state.gameState.players[state.playerId];
-      const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
+        const currentPlayer = state.gameState.players[state.playerId];
+        const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
 
-      let newDeck = [...state.gameState.deck];
-      const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
-      const drawnTiles = newDeck.splice(0, tilesToDraw);
-      newHand.push(...drawnTiles);
+        let newDeck = [...state.gameState.deck];
+        const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
+        const drawnTiles = newDeck.splice(0, tilesToDraw);
+        newHand.push(...drawnTiles);
 
-      const newScore = currentPlayer.score + validation.score;
-      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+        const newScore = currentPlayer.score + validation.score;
+        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
 
-      const updates = {
-        board: newBoard,
-        deck: newDeck,
-        [`players/${state.playerId}/hand`]: newHand,
-        [`players/${state.playerId}/score`]: newScore,
-        currentPlayerIndex: nextPlayerIndex
-      };
+        const updates = {
+          board: newBoard,
+          deck: newDeck,
+          [`players/${state.playerId}/hand`]: newHand,
+          [`players/${state.playerId}/score`]: newScore,
+          currentPlayerIndex: nextPlayerIndex
+        };
 
-      if (newDeck.length === 0 && newHand.length === 0) {
-        updates[`players/${state.playerId}/score`] = newScore + 6;
-        updates.status = 'finished';
+        if (newDeck.length === 0 && newHand.length === 0) {
+          updates[`players/${state.playerId}/score`] = newScore + 6;
+          updates.status = 'finished';
+        }
+
+        await db.ref(`games/${state.gameId}`).update(updates);
+        
+        state.pendingPlacements = [];
+        state.selectedTiles = [];
+        state.tileToPlace = null;
+        render();
+      } catch (error) {
+        console.error('Error in playTiles:', error);
+        alert(t('errorPlaying') + ': ' + error.message);
       }
-
-      await db.ref(`games/${state.gameId}`).update(updates);
-      state.pendingPlacements = [];
-      state.selectedTiles = [];
-      render();
     }
 
     async function swapTiles() {
@@ -778,25 +798,31 @@
         return;
       }
 
-      const currentPlayer = state.gameState.players[state.playerId];
-      const newHand = currentPlayer.hand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
+      try {
+        const currentPlayer = state.gameState.players[state.playerId];
+        const newHand = currentPlayer.hand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
 
-      let newDeck = [...state.gameState.deck];
-      const drawn = newDeck.splice(0, state.selectedTiles.length);
-      newHand.push(...drawn);
-      newDeck.push(...state.selectedTiles);
-      newDeck.sort(() => Math.random() - 0.5);
+        let newDeck = [...state.gameState.deck];
+        const drawn = newDeck.splice(0, state.selectedTiles.length);
+        newHand.push(...drawn);
+        newDeck.push(...state.selectedTiles);
+        newDeck.sort(() => Math.random() - 0.5);
 
-      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
 
-      await db.ref(`games/${state.gameId}`).update({
-        deck: newDeck,
-        [`players/${state.playerId}/hand`]: newHand,
-        currentPlayerIndex: nextPlayerIndex
-      });
+        await db.ref(`games/${state.gameId}`).update({
+          deck: newDeck,
+          [`players/${state.playerId}/hand`]: newHand,
+          currentPlayerIndex: nextPlayerIndex
+        });
 
-      state.selectedTiles = [];
-      render();
+        state.selectedTiles = [];
+        state.tileToPlace = null;
+        render();
+      } catch (error) {
+        console.error('Error swapping tiles:', error);
+        alert(t('errorSwapping') + ': ' + error.message);
+      }
     }
 
     function render() {
@@ -894,34 +920,42 @@
 
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
-            <h2>Qwirkle Game</h2>
-            <div><strong>Game ID:</strong> ${state.gameId} | <strong>Bag:</strong> ${state.gameState.deck.length} tiles</div>
+            <h2>${t('title')}</h2>
+            <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
           </div>
           <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
           ${state.gameState.status === 'finished' ? `
             <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
-              <strong>Game Over!</strong> Winner: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
+              <strong>${t('gameOver')}</strong> ${t('winner')}: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
             </div>
           ` : ''}
           ${isMyTurn && state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: ${isMyTurn ? '#27ae60' : '#95a5a6'};">
-              ${isMyTurn ? (state.tileToPlace ? "📍 Click on the board to place your tile" : state.selectedTiles.length > 0 ? `🔄 ${state.selectedTiles.length} tiles selected for swap` : "👆 Click a tile, then click where to place it") : `${currentTurnPlayer.name}'s turn`}
+              ${isMyTurn ? (state.tileToPlace ? `📍 ${t('clickToPlace')}` : state.selectedTiles.length > 0 ? `🔄 ${state.selectedTiles.length} ${t('tilesSelectedSwap')}` : `👆 ${t('clickTilePlace')}`) : `${currentTurnPlayer.name}${t('turn')}`}
             </div>
           ` : state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: #95a5a6;">
-              ${currentTurnPlayer.name}'s turn
+              ${currentTurnPlayer.name}${t('turn')}
             </div>
           ` : ''}
           <div class="board-container">
             <div style="display: inline-block; padding: 20px;" id="board"></div>
           </div>
-          <h3>Your Hand:</h3>
+          <h3>${t('yourHand')}</h3>
           <div class="hand-container" id="hand"></div>
           ${isMyTurn && state.gameState.status === 'playing' ? `
+            <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 14px;">
+              <strong>${t('howToPlay')}</strong><br>
+              • <strong>${t('placeOne')}</strong> ${t('placeOneDesc')}<br>
+              • <strong>${t('placeMultiple')}</strong> ${t('placeMultipleDesc')}<br>
+              • <strong>${t('swapTiles')}</strong> ${t('swapTilesDesc')}<br>
+              • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
+            </div>
+            <button onclick="debugCrossTiles()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">🔍 Debug Clover Tiles</button>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
-              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Play Tiles</button>
-              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Cancel</button>
-              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>Swap Selected (${state.selectedTiles.length})</button>
+              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
+              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
+              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
             </div>
           ` : ''}
         `;
@@ -957,13 +991,32 @@
             
             const cell = document.createElement('div');
             cell.className = 'board-cell';
+            const canPlace = isMyTurn && state.tileToPlace && !tile && !pending;
             cell.style.background = pending ? '#ffffcc' : tile ? 'white' : '#f8f9fa';
+            cell.style.cursor = canPlace ? 'pointer' : 'default';
             
+            // Hover effect for valid placement spots
+            if (canPlace) {
+              cell.onmouseenter = () => { cell.style.background = '#d4edda'; };
+              cell.onmouseleave = () => { cell.style.background = '#f8f9fa'; };
+            }
+            
+            // Click to place tile
+            cell.onclick = () => {
+              if (state.tileToPlace && isMyTurn && !tile && !pending) {
+                state.pendingPlacements.push({ row, col, tile: state.tileToPlace });
+                state.tileToPlace = null;
+                render();
+              }
+            };
+            
+            // Drag and drop (backup method)
             cell.ondragover = (e) => e.preventDefault();
             cell.ondrop = (e) => {
               e.preventDefault();
               if (state.draggedTile && isMyTurn && !tile && !pending) {
                 state.pendingPlacements.push({ row, col, tile: state.draggedTile });
+                state.draggedTile = null;
                 render();
               }
             };
@@ -996,20 +1049,70 @@
         }
         if (currentPlayer.hand && Array.isArray(currentPlayer.hand)) {
           currentPlayer.hand.forEach(tile => {
-            const isSelected = state.selectedTiles.find(t => t.id === tile.id);
+            const isSelectedForSwap = state.selectedTiles.find(t => t.id === tile.id);
+            const isSelectedForPlacement = state.tileToPlace && state.tileToPlace.id === tile.id;
+            const isAlreadyPlaced = state.pendingPlacements.find(p => p.tile.id === tile.id);
+            
+            if (isAlreadyPlaced) return; // Don't show tiles that are already placed
+            
             const tileEl = renderTile(tile, {
               draggable: true,
-              selected: isSelected,
+              selected: isSelectedForSwap,
               onDragStart: () => { state.draggedTile = tile; },
               onClick: () => {
-                if (isSelected) {
-                  state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
-                } else {
-                  state.selectedTiles.push(tile);
+                if (!isMyTurn) return;
+                
+                // If clicking the tile that's selected for placement, deselect it
+                if (isSelectedForPlacement) {
+                  state.tileToPlace = null;
+                  render();
+                  return;
                 }
+                
+                // If clicking a tile that's selected for swap, deselect it
+                if (isSelectedForSwap) {
+                  state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
+                  // If we now have exactly 1 tile selected, make it placement mode
+                  if (state.selectedTiles.length === 1) {
+                    state.tileToPlace = state.selectedTiles[0];
+                    state.selectedTiles = [];
+                  }
+                  render();
+                  return;
+                }
+                
+                // If we already have tiles selected for swap, add this one too
+                if (state.selectedTiles.length > 0) {
+                  state.selectedTiles.push(tile);
+                  render();
+                  return;
+                }
+                
+                // If we have a placement tile selected, switch to multi-select (swap mode)
+                if (state.tileToPlace) {
+                  state.selectedTiles = [state.tileToPlace, tile];
+                  state.tileToPlace = null;
+                  render();
+                  return;
+                }
+                
+                // Otherwise, select this tile for placement
+                state.tileToPlace = tile;
                 render();
               }
             });
+            
+            // Highlight tile selected for placement (green)
+            if (isSelectedForPlacement) {
+              tileEl.style.border = '3px solid #27ae60';
+              tileEl.style.boxShadow = '0 0 10px rgba(39, 174, 96, 0.5)';
+            }
+            
+            // Highlight tiles selected for swap (red)
+            if (isSelectedForSwap) {
+              tileEl.style.border = '3px solid #e74c3c';
+            }
+            
             handDiv.appendChild(tileEl);
           });
         }
@@ -1020,12 +1123,13 @@
           const cancelBtn = document.getElementById('cancelBtn');
           const swapBtn = document.getElementById('swapBtn');
           if (playBtn) playBtn.onclick = playTiles;
-          if (cancelBtn) cancelBtn.onclick = () => { state.pendingPlacements = []; render(); };
+          if (cancelBtn) cancelBtn.onclick = () => { 
+            state.pendingPlacements = []; 
+            state.tileToPlace = null;
+            render(); 
+          };
           if (swapBtn) swapBtn.onclick = swapTiles;
-          console.log('Action buttons attached');
         }
-        
-        console.log('Game screen render complete!');
       }
     }
 
