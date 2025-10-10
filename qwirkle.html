@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qwirkle Online</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    button {
+      cursor: pointer;
+      color: white;
+      border: none;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    button:hover:not(:disabled) { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-green { background: #27ae60; }
+    .btn-blue { background: #3498db; }
+    .btn-red { background: #e74c3c; }
+    .btn-orange { background: #f39c12; }
+    .tile {
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      cursor: grab;
+      font-size: 32px;
+      user-select: none;
+    }
+    .tile.selected { border: 3px solid #e74c3c; }
+    .board-cell {
+      width: 60px;
+      height: 60px;
+      border: 1px solid #bdc3c7;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .board-row { display: flex; }
+    .board-container { 
+      overflow-x: auto; 
+      border: 2px solid #34495e; 
+      border-radius: 5px; 
+      background: #ecf0f1;
+      margin: 20px 0;
+    }
+    .player-card {
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin: 5px;
+      display: inline-block;
+    }
+    .hand-container { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+    h1, h2, h3 { color: #2c3e50; margin-bottom: 15px; }
+    .game-id { 
+      background: #ecf0f1; 
+      padding: 15px; 
+      border-radius: 5px; 
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .status-bar {
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="app">
+      <h1 style="text-align: center;">🎮 Qwirkle Online</h1>
+      <p style="text-align: center; color: #7f8c8d;">Loading game...</p>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZvdbCflscZGDpV62zlycN6kEHOPnGjoE",
+      authDomain: "qwirkle-5ebab.firebaseapp.com",
+      databaseURL: "https://qwirkle-5ebab-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "qwirkle-5ebab",
+      storageBucket: "qwirkle-5ebab.firebasestorage.app",
+      messagingSenderId: "333453624833",
+      appId: "1:333453624833:web:b679c5899f384818ce2200"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const SHAPES = ['circle', 'square', 'diamond', 'star', 'cross', 'clover'];
+    const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+    const SHAPE_ICONS = { circle: '●', square: '■', diamond: '◆', star: '★', cross: '✚', clover: '♣' };
+    const COLOR_MAP = { red: '#e74c3c', orange: '#e67e22', yellow: '#f1c40f', green: '#2ecc71', blue: '#3498db', purple: '#9b59b6' };
+
+    let state = {
+      screen: 'menu',
+      playerName: '',
+      gameId: '',
+      playerId: localStorage.getItem('qwirklePlayerId') || '',
+      gameState: null,
+      selectedTiles: [],
+      pendingPlacements: [],
+      draggedTile: null
+    };
+
+    function createDeck() {
+      const deck = [];
+      SHAPES.forEach(shape => {
+        COLORS.forEach(color => {
+          for (let i = 0; i < 3; i++) {
+            deck.push({ shape, color, id: `${shape}-${color}-${i}` });
+          }
+        });
+      });
+      return deck.sort(() => Math.random() - 0.5);
+    }
+
+    function renderTile(tile, options = {}) {
+      const div = document.createElement('div');
+      div.className = 'tile' + (options.selected ? ' selected' : '');
+      div.draggable = options.draggable || false;
+      div.style.color = COLOR_MAP[tile.color];
+      div.textContent = SHAPE_ICONS[tile.shape];
+      if (options.onClick) div.onclick = options.onClick;
+      if (options.onDragStart) div.ondragstart = options.onDragStart;
+      return div;
+    }
+
+    async function createGame() {
+      if (!state.playerName.trim()) return;
+      
+      const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+      state.playerId = newPlayerId;
+      localStorage.setItem('qwirklePlayerId', newPlayerId);
+
+      const deck = createDeck();
+      const player1Hand = deck.splice(0, 6);
+      
+      const newGameRef = db.ref('games').push();
+      const newGameId = newGameRef.key;
+      
+      await newGameRef.set({
+        players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
+        deck: deck,
+        board: {},
+        currentPlayerIndex: 0,
+        playerOrder: [newPlayerId],
+        status: 'waiting',
+        createdAt: Date.now()
+      });
+
+      state.gameId = newGameId;
+      state.screen = 'lobby';
+      render();
+      listenToGame();
+    }
+
+    async function joinGame() {
+      if (!state.playerName.trim() || !state.gameId.trim()) return;
+      
+      const newPlayerId = `player_${Date.now()}_${Math.random()}`;
+      state.playerId = newPlayerId;
+      localStorage.setItem('qwirklePlayerId', newPlayerId);
+
+      const snapshot = await db.ref(`games/${state.gameId}`).once('value');
+      const game = snapshot.val();
+      
+      if (!game) { alert('Game not found!'); return; }
+      if (game.status !== 'waiting') { alert('Game already started!'); return; }
+      if (Object.keys(game.players).length >= 4) { alert('Game is full!'); return; }
+
+      const deck = [...game.deck];
+      const hand = deck.splice(0, 6);
+      const playerCount = Object.keys(game.players).length;
+      
+      await db.ref(`games/${state.gameId}`).update({
+        [`players/${newPlayerId}`]: { name: state.playerName, hand, score: 0, order: playerCount },
+        deck,
+        playerOrder: [...game.playerOrder, newPlayerId]
+      });
+
+      state.screen = 'lobby';
+      render();
+      listenToGame();
+    }
+
+    function listenToGame() {
+      db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          state.gameState = data;
+          render();
+        }
+      });
+    }
+
+    async function startGame() {
+      await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
+      state.screen = 'game';
+      render();
+    }
+
+    function validatePlacement(placements, board) {
+      if (placements.length === 0) return { valid: false, reason: 'No tiles placed' };
+
+      const newBoard = { ...board };
+      placements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
+
+      const rows = placements.map(p => p.row);
+      const cols = placements.map(p => p.col);
+      const sameRow = rows.every(r => r === rows[0]);
+      const sameCol = cols.every(c => c === cols[0]);
+
+      if (!sameRow && !sameCol) return { valid: false, reason: 'Tiles must be in same row or column' };
+
+      if (sameRow) {
+        const sortedCols = [...cols].sort((a, b) => a - b);
+        for (let i = 0; i < sortedCols.length - 1; i++) {
+          for (let c = sortedCols[i] + 1; c < sortedCols[i + 1]; c++) {
+            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: 'Tiles must be continuous' };
+          }
+        }
+      } else {
+        const sortedRows = [...rows].sort((a, b) => a - b);
+        for (let i = 0; i < sortedRows.length - 1; i++) {
+          for (let r = sortedRows[i] + 1; r < sortedRows[i + 1]; r++) {
+            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: 'Tiles must be continuous' };
+          }
+        }
+      }
+
+      const linesToCheck = new Set();
+      placements.forEach(p => {
+        linesToCheck.add(`row-${p.row}`);
+        linesToCheck.add(`col-${p.col}`);
+      });
+
+      for (const line of linesToCheck) {
+        const [type, pos] = line.split('-');
+        const position = parseInt(pos);
+        const tiles = [];
+        
+        if (type === 'row') {
+          for (let c = -50; c <= 50; c++) {
+            const tile = newBoard[`${position},${c}`];
+            if (tile) tiles.push(tile);
+            else if (tiles.length > 0) break;
+          }
+        } else {
+          for (let r = -50; r <= 50; r++) {
+            const tile = newBoard[`${r},${position}`];
+            if (tile) tiles.push(tile);
+            else if (tiles.length > 0) break;
+          }
+        }
+
+        if (tiles.length > 6) return { valid: false, reason: 'Line cannot exceed 6 tiles' };
+
+        if (tiles.length > 1) {
+          const colors = tiles.map(t => t.color);
+          const shapes = tiles.map(t => t.shape);
+          const uniqueColors = new Set(colors);
+          const uniqueShapes = new Set(shapes);
+
+          const allSameColor = uniqueColors.size === 1;
+          const allSameShape = uniqueShapes.size === 1;
+
+          if (!allSameColor && !allSameShape) return { valid: false, reason: 'Line must share color or shape' };
+          if (allSameColor && uniqueShapes.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles' };
+          if (allSameShape && uniqueColors.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles' };
+        }
+      }
+
+      if (Object.keys(board).length === 0) return { valid: true, score: calculateScore(placements, newBoard) };
+
+      let connected = false;
+      for (const p of placements) {
+        const adjacent = [
+          newBoard[`${p.row - 1},${p.col}`],
+          newBoard[`${p.row + 1},${p.col}`],
+          newBoard[`${p.row},${p.col - 1}`],
+          newBoard[`${p.row},${p.col + 1}`]
+        ];
+        if (adjacent.some(t => t && !placements.find(pl => pl.tile.id === t.id))) {
+          connected = true;
+          break;
+        }
+      }
+
+      if (!connected) return { valid: false, reason: 'Must connect to existing tiles' };
+      return { valid: true, score: calculateScore(placements, newBoard) };
+    }
+
+    function calculateScore(placements, board) {
+      let totalScore = 0;
+      const scoredLines = new Set();
+
+      placements.forEach(p => {
+        const rowKey = `row-${p.row}`;
+        if (!scoredLines.has(rowKey)) {
+          let rowTiles = [];
+          for (let c = -50; c <= 50; c++) {
+            const tile = board[`${p.row},${c}`];
+            if (tile) rowTiles.push(tile);
+            else if (rowTiles.length > 0) break;
+          }
+          if (rowTiles.length > 1) {
+            let score = rowTiles.length;
+            if (rowTiles.length === 6) score += 6;
+            totalScore += score;
+            scoredLines.add(rowKey);
+          }
+        }
+
+        const colKey = `col-${p.col}`;
+        if (!scoredLines.has(colKey)) {
+          let colTiles = [];
+          for (let r = -50; r <= 50; r++) {
+            const tile = board[`${r},${p.col}`];
+            if (tile) colTiles.push(tile);
+            else if (colTiles.length > 0) break;
+          }
+          if (colTiles.length > 1) {
+            let score = colTiles.length;
+            if (colTiles.length === 6) score += 6;
+            totalScore += score;
+            scoredLines.add(colKey);
+          }
+        }
+      });
+
+      if (totalScore === 0 && placements.length > 0) totalScore = placements.length;
+      return totalScore;
+    }
+
+    async function playTiles() {
+      if (state.pendingPlacements.length === 0) return;
+
+      const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
+      if (!validation.valid) { alert(validation.reason); return; }
+
+      const newBoard = { ...state.gameState.board };
+      state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
+
+      const currentPlayer = state.gameState.players[state.playerId];
+      const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
+
+      let newDeck = [...state.gameState.deck];
+      const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
+      const drawnTiles = newDeck.splice(0, tilesToDraw);
+      newHand.push(...drawnTiles);
+
+      const newScore = currentPlayer.score + validation.score;
+      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+
+      const updates = {
+        board: newBoard,
+        deck: newDeck,
+        [`players/${state.playerId}/hand`]: newHand,
+        [`players/${state.playerId}/score`]: newScore,
+        currentPlayerIndex: nextPlayerIndex
+      };
+
+      if (newDeck.length === 0 && newHand.length === 0) {
+        updates[`players/${state.playerId}/score`] = newScore + 6;
+        updates.status = 'finished';
+      }
+
+      await db.ref(`games/${state.gameId}`).update(updates);
+      state.pendingPlacements = [];
+      state.selectedTiles = [];
+      render();
+    }
+
+    async function swapTiles() {
+      if (state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length) {
+        alert('Cannot swap - not enough tiles in bag');
+        return;
+      }
+
+      const currentPlayer = state.gameState.players[state.playerId];
+      const newHand = currentPlayer.hand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
+
+      let newDeck = [...state.gameState.deck];
+      const drawn = newDeck.splice(0, state.selectedTiles.length);
+      newHand.push(...drawn);
+      newDeck.push(...state.selectedTiles);
+      newDeck.sort(() => Math.random() - 0.5);
+
+      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+
+      await db.ref(`games/${state.gameId}`).update({
+        deck: newDeck,
+        [`players/${state.playerId}/hand`]: newHand,
+        currentPlayerIndex: nextPlayerIndex
+      });
+
+      state.selectedTiles = [];
+      render();
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      if (state.screen === 'menu') {
+        app.innerHTML = `
+          <h1 style="text-align: center;">🎮 Qwirkle Online</h1>
+          <div style="max-width: 500px; margin: 0 auto;">
+            <input type="text" id="playerName" placeholder="Your name" value="${state.playerName}">
+            <button class="btn-green" id="createBtn">Create New Game</button>
+            <div style="margin: 20px 0; text-align: center; color: #7f8c8d;">OR</div>
+            <input type="text" id="gameIdInput" placeholder="Game ID" value="${state.gameId}">
+            <button class="btn-blue" id="joinBtn">Join Game</button>
+          </div>
+        `;
+        document.getElementById('playerName').oninput = (e) => state.playerName = e.target.value;
+        document.getElementById('gameIdInput').oninput = (e) => state.gameId = e.target.value;
+        document.getElementById('createBtn').onclick = createGame;
+        document.getElementById('joinBtn').onclick = joinGame;
+      }
+
+      else if (state.screen === 'lobby' && state.gameState) {
+        const isHost = state.gameState.playerOrder[0] === state.playerId;
+        const playerCount = Object.keys(state.gameState.players).length;
+
+        app.innerHTML = `
+          <h1 style="text-align: center;">Game Lobby</h1>
+          <div class="game-id">
+            <strong>Game ID:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
+            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">Share this ID with friends!</p>
+          </div>
+          <h3>Players (${playerCount}/4):</h3>
+          <div id="playerList"></div>
+          ${isHost && playerCount >= 2 ? '<button class="btn-green" id="startBtn">Start Game</button>' : ''}
+          ${!isHost ? '<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">Waiting for host to start...</p>' : ''}
+        `;
+
+        const playerList = document.getElementById('playerList');
+        Object.entries(state.gameState.players).forEach(([id, player]) => {
+          const div = document.createElement('div');
+          div.className = 'player-card';
+          div.style.background = '#ecf0f1';
+          div.textContent = `${player.name}${id === state.playerId ? ' (You)' : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
+          playerList.appendChild(div);
+        });
+
+        if (isHost && playerCount >= 2) {
+          document.getElementById('startBtn').onclick = startGame;
+        }
+      }
+
+      else if (state.screen === 'game' && state.gameState) {
+        const currentPlayer = state.gameState.players[state.playerId];
+        const isMyTurn = state.gameState.playerOrder[state.gameState.currentPlayerIndex] === state.playerId;
+        const currentTurnPlayer = state.gameState.players[state.gameState.playerOrder[state.gameState.currentPlayerIndex]];
+
+        let minRow = 0, maxRow = 0, minCol = 0, maxCol = 0;
+        Object.keys(state.gameState.board).forEach(key => {
+          const [r, c] = key.split(',').map(Number);
+          minRow = Math.min(minRow, r);
+          maxRow = Math.max(maxRow, r);
+          minCol = Math.min(minCol, c);
+          maxCol = Math.max(maxCol, c);
+        });
+        minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
+
+        app.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+            <h2>Qwirkle Game</h2>
+            <div><strong>Game ID:</strong> ${state.gameId} | <strong>Bag:</strong> ${state.gameState.deck.length} tiles</div>
+          </div>
+          <div id="scores"></div>
+          ${state.gameState.status === 'finished' ? `
+            <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
+              <strong>Game Over!</strong> Winner: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
+            </div>
+          ` : `
+            <div class="status-bar" style="background: ${isMyTurn ? '#27ae60' : '#95a5a6'};">
+              ${isMyTurn ? "Your turn!" : `${currentTurnPlayer.name}'s turn`}
+            </div>
+          `}
+          <div class="board-container"><div style="display: inline-block; padding: 20px;" id="board"></div></div>
+          <h3>Your Hand:</h3>
+          <div class="hand-container" id="hand"></div>
+          ${isMyTurn && state.gameState.status === 'playing' ? `
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Play Tiles</button>
+              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Cancel</button>
+              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>Swap Selected (${state.selectedTiles.length})</button>
+            </div>
+          ` : ''}
+        `;
+
+        const scoresDiv = document.getElementById('scores');
+        state.gameState.playerOrder.forEach((pid, idx) => {
+          const p = state.gameState.players[pid];
+          const isCurrent = idx === state.gameState.currentPlayerIndex;
+          const card = document.createElement('div');
+          card.className = 'player-card';
+          card.style.background = isCurrent ? '#3498db' : '#ecf0f1';
+          card.style.color = isCurrent ? 'white' : 'black';
+          if (pid === state.playerId) card.style.border = '3px solid #27ae60';
+          card.textContent = `${p.name}: ${p.score} pts${isCurrent ? ' 🎯' : ''}`;
+          scoresDiv.appendChild(card);
+        });
+
+        const boardDiv = document.getElementById('board');
+        for (let row = minRow; row <= maxRow; row++) {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'board-row';
+          for (let col = minCol; col <= maxCol; col++) {
+            const key = `${row},${col}`;
+            const tile = state.gameState.board[key];
+            const pending = state.pendingPlacements.find(p => p.row === row && p.col === col);
+            
+            const cell = document.createElement('div');
+            cell.className = 'board-cell';
+            cell.style.background = pending ? '#ffffcc' : tile ? 'white' : '#f8f9fa';
+            
+            cell.ondragover = (e) => e.preventDefault();
+            cell.ondrop = (e) => {
+              e.preventDefault();
+              if (state.draggedTile && isMyTurn && !tile && !pending) {
+                state.pendingPlacements.push({ row, col, tile: state.draggedTile });
+                render();
+              }
+            };
+
+            if (tile) cell.appendChild(renderTile(tile));
+            if (pending) {
+              const pendingTile = renderTile(pending.tile, {
+                onClick: () => {
+                  state.pendingPlacements = state.pendingPlacements.filter(p => p !== pending);
+                  render();
+                }
+              });
+              pendingTile.style.opacity = '0.8';
+              cell.appendChild(pendingTile);
+            }
+            
+            rowDiv.appendChild(cell);
+          }
+          boardDiv.appendChild(rowDiv);
+        }
+
+        const handDiv = document.getElementById('hand');
+        currentPlayer.hand.forEach(tile => {
+          const isSelected = state.selectedTiles.find(t => t.id === tile.id);
+          const tileEl = renderTile(tile, {
+            draggable: true,
+            selected: isSelected,
+            onDragStart: () => { state.draggedTile = tile; },
+            onClick: () => {
+              if (isSelected) {
+                state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
+              } else {
+                state.selectedTiles.push(tile);
+              }
+              render();
+            }
+          });
+          handDiv.appendChild(tileEl);
+        });
+
+        if (isMyTurn && state.gameState.status === 'playing') {
+          const playBtn = document.getElementById('playBtn');
+          const cancelBtn = document.getElementById('cancelBtn');
+          const swapBtn = document.getElementById('swapBtn');
+          if (playBtn) playBtn.onclick = playTiles;
+          if (cancelBtn) cancelBtn.onclick = () => { state.pendingPlacements = []; render(); };
+          if (swapBtn) swapBtn.onclick = swapTiles;
+        }
+      }
+    }
+
+    setTimeout(() => {
+      render();
+    }, 500);
+  </script>
+</body>
+</html>
