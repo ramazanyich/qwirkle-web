@@ -189,8 +189,197 @@
       selectedTiles: [],
       pendingPlacements: [],
       draggedTile: null,
-      tileToPlace: null  // For click-to-place mode
+      tileToPlace: null,  // For click-to-place mode
+      language: localStorage.getItem('qwirkleLanguage') || 'en'
     };
+
+    const translations = {
+      en: {
+        title: 'Qwirkle Online',
+        yourName: 'Your name',
+        createGame: 'Create New Game',
+        or: 'OR',
+        gameId: 'Game ID',
+        joinGame: 'Join Game',
+        gameLobby: 'Game Lobby',
+        shareId: 'Share this ID with friends!',
+        players: 'Players',
+        waitingHost: 'Waiting for host to start the game...',
+        startGame: 'Start Game',
+        bag: 'Bag',
+        tiles: 'tiles',
+        gameOver: 'Game Over!',
+        winner: 'Winner',
+        yourTurn: 'Your turn!',
+        turn: "'s turn",
+        clickToPlace: 'Click on the board to place your tile',
+        tilesSelectedSwap: 'tiles selected for swap',
+        clickTilePlace: 'Click a tile, then click where to place it',
+        yourHand: 'Your Hand:',
+        howToPlay: 'How to play:',
+        placeOne: 'Place one tile:',
+        placeOneDesc: 'Click a tile (green glow), then click on the board',
+        placeMultiple: 'Place multiple tiles:',
+        placeMultipleDesc: 'Drag tiles from your hand to the board',
+        swapTiles: 'Swap tiles:',
+        swapTilesDesc: 'Click 2+ tiles to select them (red border), then click "Swap"',
+        removeTile: 'Remove placed tile:',
+        removeTileDesc: 'Click on yellow tiles on the board',
+        playButton: 'Play',
+        tile: 'Tile',
+        clearBoard: 'Clear Board',
+        swap: 'Swap',
+        enterName: 'Please enter your name!',
+        enterNameAndId: 'Please enter your name and game ID!',
+        gameNotFound: 'Game not found! Check the Game ID and try again.',
+        gameStarted: 'Game already started!',
+        gameFull: 'Game is full!',
+        cannotSwap: 'Cannot swap - not enough tiles in bag',
+        pts: 'pts',
+        rules: 'Rules',
+        rulesTitle: 'Qwirkle Rules',
+        rulesClose: 'Close',
+        rulesObjective: 'Objective:',
+        rulesObjectiveText: 'Score the most points by creating lines of tiles that share a common attribute.',
+        rulesTiles: 'Tiles:',
+        rulesTilesText: '108 tiles with 6 shapes in 6 colors (3 of each combination).',
+        rulesPlacement: 'Placement Rules:',
+        rulesPlacement1: 'Tiles in a line must share either the same color OR the same shape (not both)',
+        rulesPlacement2: 'No duplicate tiles in a line (same color AND same shape)',
+        rulesPlacement3: 'Lines can have a maximum of 6 tiles',
+        rulesPlacement4: 'New tiles must connect to existing tiles on the board',
+        rulesScoring: 'Scoring:',
+        rulesScoring1: 'Score 1 point per tile in each line you complete or extend',
+        rulesScoring2: 'Complete a line of 6 tiles = QWIRKLE! = +6 bonus points (12 total)',
+        rulesScoring3: 'If a tile creates multiple lines, you score for all of them',
+        rulesTurns: 'Your Turn:',
+        rulesTurns1: 'Place 1 or more tiles from your hand, OR',
+        rulesTurns2: 'Swap any number of tiles (skip your turn)',
+        rulesEnd: 'End of Game:',
+        rulesEndText: 'Game ends when the bag is empty and one player plays their last tile. That player gets +6 bonus points. Highest score wins!'
+      },
+      ru: {
+        title: 'Qwirkle Онлайн',
+        yourName: 'Ваше имя',
+        createGame: 'Создать новую игру',
+        or: 'ИЛИ',
+        gameId: 'ID игры',
+        joinGame: 'Присоединиться к игре',
+        gameLobby: 'Лобби игры',
+        shareId: 'Поделитесь этим ID с друзьями!',
+        players: 'Игроки',
+        waitingHost: 'Ожидание начала игры хостом...',
+        startGame: 'Начать игру',
+        bag: 'Мешок',
+        tiles: 'фишек',
+        gameOver: 'Игра окончена!',
+        winner: 'Победитель',
+        yourTurn: 'Ваш ход!',
+        turn: ' ходит',
+        clickToPlace: 'Нажмите на доску, чтобы поставить фишку',
+        tilesSelectedSwap: 'фишек выбрано для обмена',
+        clickTilePlace: 'Нажмите на фишку, затем куда её поставить',
+        yourHand: 'Ваши фишки:',
+        howToPlay: 'Как играть:',
+        placeOne: 'Поставить одну фишку:',
+        placeOneDesc: 'Нажмите на фишку (зелёное свечение), затем на доску',
+        placeMultiple: 'Поставить несколько фишек:',
+        placeMultipleDesc: 'Перетащите фишки из руки на доску',
+        swapTiles: 'Обменять фишки:',
+        swapTilesDesc: 'Нажмите на 2+ фишки (красная рамка), затем "Обменять"',
+        removeTile: 'Убрать поставленную фишку:',
+        removeTileDesc: 'Нажмите на жёлтую фишку на доске',
+        playButton: 'Сыграть',
+        tile: 'фишку',
+        clearBoard: 'Очистить доску',
+        swap: 'Обменять',
+        enterName: 'Пожалуйста, введите ваше имя!',
+        enterNameAndId: 'Пожалуйста, введите имя и ID игры!',
+        gameNotFound: 'Игра не найдена! Проверьте ID игры и попробуйте снова.',
+        gameStarted: 'Игра уже началась!',
+        gameFull: 'Игра заполнена!',
+        cannotSwap: 'Нельзя обменять - недостаточно фишек в мешке',
+        pts: 'очк.',
+        rules: 'Правила',
+        rulesTitle: 'Правила Qwirkle',
+        rulesClose: 'Закрыть',
+        rulesObjective: 'Цель:',
+        rulesObjectiveText: 'Набрать максимум очков, создавая линии фишек с общими признаками.',
+        rulesTiles: 'Фишки:',
+        rulesTilesText: '108 фишек с 6 формами в 6 цветах (по 3 каждой комбинации).',
+        rulesPlacement: 'Правила размещения:',
+        rulesPlacement1: 'Фишки в линии должны иметь одинаковый цвет ИЛИ одинаковую форму (не оба)',
+        rulesPlacement2: 'Нет дубликатов в линии (одинаковый цвет И форма)',
+        rulesPlacement3: 'Линии могут иметь максимум 6 фишек',
+        rulesPlacement4: 'Новые фишки должны соединяться с существующими на доске',
+        rulesScoring: 'Подсчёт очков:',
+        rulesScoring1: '1 очко за каждую фишку в линии, которую вы создали или дополнили',
+        rulesScoring2: 'Линия из 6 фишек = QWIRKLE! = +6 бонусных очков (12 всего)',
+        rulesScoring3: 'Если фишка создаёт несколько линий, вы получаете очки за все',
+        rulesTurns: 'Ваш ход:',
+        rulesTurns1: 'Поставьте 1 или больше фишек из руки, ИЛИ',
+        rulesTurns2: 'Обменяйте любое количество фишек (пропускаете ход)',
+        rulesEnd: 'Конец игры:',
+        rulesEndText: 'Игра заканчивается, когда мешок пуст и игрок выставил последнюю фишку. Этот игрок получает +6 бонусных очков. Побеждает игрок с наибольшим счётом!'
+      }
+    };
+
+    function t(key) {
+      return translations[state.language][key] || key;
+    }
+
+    function toggleLanguage() {
+      state.language = state.language === 'en' ? 'ru' : 'en';
+      localStorage.setItem('qwirkleLanguage', state.language);
+      render();
+    }
+
+    function showRules() {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;';
+      
+      overlay.innerHTML = `
+        <div style="background: white; border-radius: 10px; padding: 30px; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+          <h2 style="margin-bottom: 20px; color: #2c3e50;">${t('rulesTitle')}</h2>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesObjective')}</h3>
+          <p>${t('rulesObjectiveText')}</p>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesTiles')}</h3>
+          <p>${t('rulesTilesText')}</p>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesPlacement')}</h3>
+          <ul style="margin-left: 20px;">
+            <li>${t('rulesPlacement1')}</li>
+            <li>${t('rulesPlacement2')}</li>
+            <li>${t('rulesPlacement3')}</li>
+            <li>${t('rulesPlacement4')}</li>
+          </ul>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesScoring')}</h3>
+          <ul style="margin-left: 20px;">
+            <li>${t('rulesScoring1')}</li>
+            <li>${t('rulesScoring2')}</li>
+            <li>${t('rulesScoring3')}</li>
+          </ul>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesTurns')}</h3>
+          <ul style="margin-left: 20px;">
+            <li>${t('rulesTurns1')}</li>
+            <li>${t('rulesTurns2')}</li>
+          </ul>
+          
+          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesEnd')}</h3>
+          <p>${t('rulesEndText')}</p>
+          
+          <button class="btn-blue" id="closeRules" style="margin-top: 20px;">${t('rulesClose')}</button>
+        </div>
+      `;
+      
+      document.body.appendChild(overlay);
+      document.getElementById('closeRules').onclick = () => overlay.remove();
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    }
 
     function createDeck() {
       const deck = [];
@@ -219,7 +408,7 @@
       console.log('Create game clicked, playerName:', state.playerName);
       
       if (!state.playerName.trim()) {
-        alert('Please enter your name!');
+        alert(t('enterName'));
         return;
       }
       
@@ -260,7 +449,7 @@
       console.log('Join game clicked');
       
       if (!state.playerName.trim() || !state.gameId.trim()) {
-        alert('Please enter your name and game ID!');
+        alert(t('enterNameAndId'));
         return;
       }
       
@@ -274,15 +463,15 @@
         const game = snapshot.val();
         
         if (!game) { 
-          alert('Game not found! Check the Game ID and try again.'); 
+          alert(t('gameNotFound')); 
           return; 
         }
         if (game.status !== 'waiting') { 
-          alert('Game already started!'); 
+          alert(t('gameStarted')); 
           return; 
         }
         if (Object.keys(game.players).length >= 4) { 
-          alert('Game is full!'); 
+          alert(t('gameFull')); 
           return; 
         }
 
@@ -580,13 +769,19 @@
 
       if (state.screen === 'menu') {
         app.innerHTML = `
-          <h1 style="text-align: center;">🎮 Qwirkle Online</h1>
+          <div style="text-align: right; margin-bottom: 20px;">
+            <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer;">
+              ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
+            </button>
+          </div>
+          <h1 style="text-align: center;">${t('title')}</h1>
           <div style="max-width: 500px; margin: 0 auto;">
-            <input type="text" id="playerName" placeholder="Your name" value="${state.playerName}">
-            <button class="btn-green" id="createBtn">Create New Game</button>
-            <div style="margin: 20px 0; text-align: center; color: #7f8c8d;">OR</div>
-            <input type="text" id="gameIdInput" placeholder="Game ID" value="${state.gameId}">
-            <button class="btn-blue" id="joinBtn">Join Game</button>
+            <input type="text" id="playerName" placeholder="${t('yourName')}" value="${state.playerName}">
+            <button class="btn-green" id="createBtn">${t('createGame')}</button>
+            <div style="margin: 20px 0; text-align: center; color: #7f8c8d;">${t('or')}</div>
+            <input type="text" id="gameIdInput" placeholder="${t('gameId')}" value="${state.gameId}">
+            <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
+            <button class="btn-gray" id="rulesBtn" style="margin-top: 20px;">${t('rules')}</button>
           </div>
         `;
         
@@ -594,6 +789,9 @@
         const gameInput = document.getElementById('gameIdInput');
         const createBtn = document.getElementById('createBtn');
         const joinBtn = document.getElementById('joinBtn');
+        const rulesBtn = document.getElementById('rulesBtn');
+        
+        window.toggleLanguage = toggleLanguage;
         
         nameInput.oninput = (e) => {
           state.playerName = e.target.value;
@@ -611,6 +809,9 @@
           console.log('Join button clicked');
           joinGame();
         };
+        rulesBtn.onclick = () => {
+          showRules();
+        };
         
         console.log('Menu rendered, buttons attached');
       }
@@ -620,15 +821,15 @@
         const playerCount = Object.keys(state.gameState.players).length;
 
         app.innerHTML = `
-          <h1 style="text-align: center;">Game Lobby</h1>
+          <h1 style="text-align: center;">${t('gameLobby')}</h1>
           <div class="game-id">
-            <strong>Game ID:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
-            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">Share this ID with friends!</p>
+            <strong>${t('gameId')}:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
+            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">${t('shareId')}</p>
           </div>
-          <h3>Players (${playerCount}/4):</h3>
+          <h3>${t('players')} (${playerCount}/4):</h3>
           <div id="playerList"></div>
-          ${isHost && playerCount >= 2 ? '<button class="btn-green" id="startBtn">Start Game</button>' : ''}
-          ${!isHost ? '<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">Waiting for host to start...</p>' : ''}
+          ${isHost && playerCount >= 2 ? `<button class="btn-green" id="startBtn">${t('startGame')}</button>` : ''}
+          ${!isHost ? `<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">${t('waitingHost')}</p>` : ''}
         `;
 
         const playerList = document.getElementById('playerList');
@@ -680,40 +881,41 @@
 
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
-            <h2>Qwirkle Game</h2>
-            <div><strong>Game ID:</strong> ${state.gameId} | <strong>Bag:</strong> ${state.gameState.deck.length} tiles</div>
+            <h2>${t('title')}</h2>
+            <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
           </div>
           <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
           ${state.gameState.status === 'finished' ? `
             <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
-              <strong>Game Over!</strong> Winner: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
+              <strong>${t('gameOver')}</strong> ${t('winner')}: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
             </div>
           ` : ''}
           ${isMyTurn && state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: ${isMyTurn ? '#27ae60' : '#95a5a6'};">
-              ${isMyTurn ? (state.tileToPlace ? "📍 Click on the board to place your tile" : "👆 Click a tile from your hand, then click where to place it") : `${currentTurnPlayer.name}'s turn`}
+              ${isMyTurn ? (state.tileToPlace ? `📍 ${t('clickToPlace')}` : state.selectedTiles.length > 0 ? `🔄 ${state.selectedTiles.length} ${t('tilesSelectedSwap')}` : `👆 ${t('clickTilePlace')}`) : `${currentTurnPlayer.name}${t('turn')}`}
             </div>
           ` : state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: #95a5a6;">
-              ${currentTurnPlayer.name}'s turn
+              ${currentTurnPlayer.name}${t('turn')}
             </div>
           ` : ''}
           <div class="board-container">
             <div style="display: inline-block; padding: 20px;" id="board"></div>
           </div>
-          <h3>Your Hand:</h3>
+          <h3>${t('yourHand')}</h3>
           <div class="hand-container" id="hand"></div>
           ${isMyTurn && state.gameState.status === 'playing' ? `
             <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 14px;">
-              <strong>How to play:</strong><br>
-              • <strong>Place tiles:</strong> Click a tile, then click on the board to place it<br>
-              • <strong>Remove placed tile:</strong> Click on it on the board (yellow tiles)<br>
-              • <strong>Swap tiles:</strong> Hold Shift and click tiles to select them, then click "Swap"
+              <strong>${t('howToPlay')}</strong><br>
+              • <strong>${t('placeOne')}</strong> ${t('placeOneDesc')}<br>
+              • <strong>${t('placeMultiple')}</strong> ${t('placeMultipleDesc')}<br>
+              • <strong>${t('swapTiles')}</strong> ${t('swapTilesDesc')}<br>
+              • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
-              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ Play ${state.pendingPlacements.length} Tile${state.pendingPlacements.length !== 1 ? 's' : ''}</button>
-              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ Clear Board</button>
-              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 Swap ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' Tile' + (state.selectedTiles.length !== 1 ? 's' : '') : 'Tiles'}</button>
+              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
+              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
+              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
             </div>
           ` : ''}
         `;
@@ -732,7 +934,7 @@
           card.style.background = isCurrent ? '#3498db' : '#ecf0f1';
           card.style.color = isCurrent ? 'white' : 'black';
           if (pid === state.playerId) card.style.border = '3px solid #27ae60';
-          card.textContent = `${p.name}: ${p.score} pts${isCurrent ? ' 🎯' : ''}`;
+          card.textContent = `${p.name}: ${p.score} ${t('pts')}${isCurrent ? ' 🎯' : ''}`;
           scoresDiv.appendChild(card);
         });
         console.log('Scores populated');
@@ -820,29 +1022,57 @@
               selected: isSelectedForSwap,
               onDragStart: () => { state.draggedTile = tile; },
               onClick: () => {
-                if (isMyTurn) {
-                  // If shift key is held, add to swap selection
-                  if (event.shiftKey) {
-                    if (isSelectedForSwap) {
-                      state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
-                    } else {
-                      state.selectedTiles.push(tile);
-                      state.tileToPlace = null;
-                    }
-                  } else {
-                    // Otherwise, select for placement
-                    state.tileToPlace = state.tileToPlace && state.tileToPlace.id === tile.id ? null : tile;
+                if (!isMyTurn) return;
+                
+                // If clicking the tile that's selected for placement, deselect it
+                if (isSelectedForPlacement) {
+                  state.tileToPlace = null;
+                  render();
+                  return;
+                }
+                
+                // If clicking a tile that's selected for swap, deselect it
+                if (isSelectedForSwap) {
+                  state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
+                  // If we now have exactly 1 tile selected, make it placement mode
+                  if (state.selectedTiles.length === 1) {
+                    state.tileToPlace = state.selectedTiles[0];
                     state.selectedTiles = [];
                   }
                   render();
+                  return;
                 }
+                
+                // If we already have tiles selected for swap, add this one too
+                if (state.selectedTiles.length > 0) {
+                  state.selectedTiles.push(tile);
+                  render();
+                  return;
+                }
+                
+                // If we have a placement tile selected, switch to multi-select (swap mode)
+                if (state.tileToPlace) {
+                  state.selectedTiles = [state.tileToPlace, tile];
+                  state.tileToPlace = null;
+                  render();
+                  return;
+                }
+                
+                // Otherwise, select this tile for placement
+                state.tileToPlace = tile;
+                render();
               }
             });
             
-            // Highlight tile selected for placement
+            // Highlight tile selected for placement (green)
             if (isSelectedForPlacement) {
               tileEl.style.border = '3px solid #27ae60';
               tileEl.style.boxShadow = '0 0 10px rgba(39, 174, 96, 0.5)';
+            }
+            
+            // Highlight tiles selected for swap (red)
+            if (isSelectedForSwap) {
+              tileEl.style.border = '3px solid #e74c3c';
             }
             
             handDiv.appendChild(tileEl);
