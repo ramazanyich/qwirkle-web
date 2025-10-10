@@ -128,18 +128,18 @@
     if (typeof firebase === 'undefined') {
       document.getElementById('app').innerHTML = `
         <div class="error-msg">
-          <h2>Error: Firebase Failed to Load</h2>
-          <p>The Firebase library couldn't load. This might be due to:</p>
+          <h2>${t('firebaseError')}</h2>
+          <p>${t('firebaseErrorDesc')}</p>
           <ul>
-            <li>Poor internet connection</li>
-            <li>Firewall or ad-blocker blocking scripts</li>
-            <li>Browser security settings</li>
+            <li>${t('poorConnection')}</li>
+            <li>${t('firewall')}</li>
+            <li>${t('browserSettings')}</li>
           </ul>
-          <p style="margin-top: 10px;">Try:</p>
+          <p style="margin-top: 10px;">${t('tryRefresh')}</p>
           <ul>
-            <li>Refreshing the page</li>
-            <li>Disabling ad-blockers</li>
-            <li>Using a different browser</li>
+            <li>${t('refreshPage')}</li>
+            <li>${t('disableAdblock')}</li>
+            <li>${t('differentBrowser')}</li>
           </ul>
         </div>
       `;
@@ -167,9 +167,9 @@
       console.error('Firebase initialization error:', error);
       document.getElementById('app').innerHTML = `
         <div class="error-msg">
-          <h2>Firebase Initialization Error</h2>
+          <h2>${t('firebaseInitError')}</h2>
           <p>${error.message}</p>
-          <p>Please refresh the page and try again.</p>
+          <p>${t('refreshTryAgain')}</p>
         </div>
       `;
       throw error;
@@ -178,7 +178,7 @@
     const SHAPES = ['circle', 'square', 'diamond', 'star', 'cross', 'clover'];
     const COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
     const SHAPE_ICONS = { circle: '●', square: '■', diamond: '◆', star: '★', cross: '✚', clover: '♣' };
-    const COLOR_MAP = { red: '#e74c3c', orange: '#e67e22', yellow: '#f1c40f', green: '#2ecc71', blue: '#3498db', purple: '#9b59b6' };
+    const COLOR_MAP = { red: '#ff4081', orange: '#8B4513', yellow: '#f1c40f', green: '#2ecc71', blue: '#3498db', purple: '#9b59b6' };
 
     let state = {
       screen: 'menu',
@@ -256,7 +256,31 @@
         rulesTurns1: 'Place 1 or more tiles from your hand, OR',
         rulesTurns2: 'Swap any number of tiles (skip your turn)',
         rulesEnd: 'End of Game:',
-        rulesEndText: 'Game ends when the bag is empty and one player plays their last tile. That player gets +6 bonus points. Highest score wins!'
+        rulesEndText: 'Game ends when the bag is empty and one player plays their last tile. That player gets +6 bonus points. Highest score wins!',
+        errorNoTiles: 'No tiles placed',
+        errorSameRowCol: 'Tiles must be in same row or column',
+        errorContinuous: 'Tiles must be continuous',
+        errorMaxSix: 'Line cannot exceed 6 tiles',
+        errorShareAttribute: 'Line must share color or shape',
+        errorDuplicates: 'Duplicate tiles in line',
+        errorConnect: 'Must connect to existing tiles',
+        errorCreating: 'Error creating game',
+        errorJoining: 'Error joining game',
+        errorStarting: 'Error starting game',
+        errorPlaying: 'Error playing tiles',
+        errorSwapping: 'Error swapping tiles',
+        firebaseError: 'Firebase Failed to Load',
+        firebaseErrorDesc: 'The Firebase library couldn\'t load. This might be due to:',
+        poorConnection: 'Poor internet connection',
+        firewall: 'Firewall or ad-blocker blocking scripts',
+        browserSettings: 'Browser security settings',
+        tryRefresh: 'Try:',
+        refreshPage: 'Refreshing the page',
+        disableAdblock: 'Disabling ad-blockers',
+        differentBrowser: 'Using a different browser',
+        firebaseInitError: 'Firebase Initialization Error',
+        refreshTryAgain: 'Please refresh the page and try again.',
+        playerNotFound: 'Player data not found. Please refresh the page.'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -320,7 +344,31 @@
         rulesTurns1: 'Поставьте 1 или больше фишек из руки, ИЛИ',
         rulesTurns2: 'Обменяйте любое количество фишек (пропускаете ход)',
         rulesEnd: 'Конец игры:',
-        rulesEndText: 'Игра заканчивается, когда мешок пуст и игрок выставил последнюю фишку. Этот игрок получает +6 бонусных очков. Побеждает игрок с наибольшим счётом!'
+        rulesEndText: 'Игра заканчивается, когда мешок пуст и игрок выставил последнюю фишку. Этот игрок получает +6 бонусных очков. Побеждает игрок с наибольшим счётом!',
+        errorNoTiles: 'Фишки не выставлены',
+        errorSameRowCol: 'Фишки должны быть в одном ряду или столбце',
+        errorContinuous: 'Фишки должны быть непрерывными',
+        errorMaxSix: 'Линия не может превышать 6 фишек',
+        errorShareAttribute: 'Линия должна иметь общий цвет или форму',
+        errorDuplicates: 'Дубликаты фишек в линии',
+        errorConnect: 'Должны соединяться с существующими фишками',
+        errorCreating: 'Ошибка создания игры',
+        errorJoining: 'Ошибка присоединения к игре',
+        errorStarting: 'Ошибка запуска игры',
+        errorPlaying: 'Ошибка выставления фишек',
+        errorSwapping: 'Ошибка обмена фишек',
+        firebaseError: 'Ошибка загрузки Firebase',
+        firebaseErrorDesc: 'Библиотека Firebase не загрузилась. Это может быть из-за:',
+        poorConnection: 'Плохого интернет-соединения',
+        firewall: 'Блокировки скриптов файрволом или блокировщиком рекламы',
+        browserSettings: 'Настроек безопасности браузера',
+        tryRefresh: 'Попробуйте:',
+        refreshPage: 'Обновить страницу',
+        disableAdblock: 'Отключить блокировщики рекламы',
+        differentBrowser: 'Использовать другой браузер',
+        firebaseInitError: 'Ошибка инициализации Firebase',
+        refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
+        playerNotFound: 'Данные игрока не найдены. Пожалуйста, обновите страницу.'
       }
     };
 
@@ -441,7 +489,7 @@
         listenToGame();
       } catch (error) {
         console.error('Error creating game:', error);
-        alert('Error creating game: ' + error.message);
+        alert(t('errorCreating') + ': ' + error.message);
       }
     }
 
@@ -492,7 +540,7 @@
         listenToGame();
       } catch (error) {
         console.error('Error joining game:', error);
-        alert('Error joining game: ' + error.message);
+        alert(t('errorJoining') + ': ' + error.message);
       }
     }
 
@@ -524,12 +572,12 @@
         // render() will be called automatically by the listener
       } catch (error) {
         console.error('Error starting game:', error);
-        alert('Error starting game: ' + error.message);
+        alert(t('errorStarting') + ': ' + error.message);
       }
     }
 
     function validatePlacement(placements, board) {
-      if (placements.length === 0) return { valid: false, reason: 'No tiles placed' };
+      if (placements.length === 0) return { valid: false, reason: t('errorNoTiles') };
 
       // Ensure board is an object, even if it's undefined/null
       board = board || {};
@@ -542,20 +590,20 @@
       const sameRow = rows.every(r => r === rows[0]);
       const sameCol = cols.every(c => c === cols[0]);
 
-      if (!sameRow && !sameCol) return { valid: false, reason: 'Tiles must be in same row or column' };
+      if (!sameRow && !sameCol) return { valid: false, reason: t('errorSameRowCol') };
 
       if (sameRow) {
         const sortedCols = [...cols].sort((a, b) => a - b);
         for (let i = 0; i < sortedCols.length - 1; i++) {
           for (let c = sortedCols[i] + 1; c < sortedCols[i + 1]; c++) {
-            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: 'Tiles must be continuous' };
+            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: t('errorContinuous') };
           }
         }
       } else {
         const sortedRows = [...rows].sort((a, b) => a - b);
         for (let i = 0; i < sortedRows.length - 1; i++) {
           for (let r = sortedRows[i] + 1; r < sortedRows[i + 1]; r++) {
-            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: 'Tiles must be continuous' };
+            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: t('errorContinuous') };
           }
         }
       }
@@ -585,7 +633,7 @@
           }
         }
 
-        if (tiles.length > 6) return { valid: false, reason: 'Line cannot exceed 6 tiles' };
+        if (tiles.length > 6) return { valid: false, reason: t('errorMaxSix') };
 
         if (tiles.length > 1) {
           const colors = tiles.map(t => t.color);
@@ -596,9 +644,9 @@
           const allSameColor = uniqueColors.size === 1;
           const allSameShape = uniqueShapes.size === 1;
 
-          if (!allSameColor && !allSameShape) return { valid: false, reason: 'Line must share color or shape' };
-          if (allSameColor && uniqueShapes.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles' };
-          if (allSameShape && uniqueColors.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles' };
+          if (!allSameColor && !allSameShape) return { valid: false, reason: t('errorShareAttribute') };
+          if (allSameColor && uniqueShapes.size !== tiles.length) return { valid: false, reason: t('errorDuplicates') };
+          if (allSameShape && uniqueColors.size !== tiles.length) return { valid: false, reason: t('errorDuplicates') };
         }
       }
 
@@ -618,7 +666,7 @@
         }
       }
 
-      if (!connected) return { valid: false, reason: 'Must connect to existing tiles' };
+      if (!connected) return { valid: false, reason: t('errorConnect') };
       return { valid: true, score: calculateScore(placements, newBoard) };
     }
 
@@ -668,75 +716,47 @@
     }
 
     async function playTiles() {
-      console.log('Play tiles clicked');
-      
-      if (state.pendingPlacements.length === 0) {
-        console.log('No pending placements');
-        return;
+      if (state.pendingPlacements.length === 0) return;
+
+      const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
+      if (!validation.valid) { alert(validation.reason); return; }
+
+      const newBoard = { ...state.gameState.board };
+      state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
+
+      const currentPlayer = state.gameState.players[state.playerId];
+      const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
+
+      let newDeck = [...state.gameState.deck];
+      const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
+      const drawnTiles = newDeck.splice(0, tilesToDraw);
+      newHand.push(...drawnTiles);
+
+      const newScore = currentPlayer.score + validation.score;
+      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+
+      const updates = {
+        board: newBoard,
+        deck: newDeck,
+        [`players/${state.playerId}/hand`]: newHand,
+        [`players/${state.playerId}/score`]: newScore,
+        currentPlayerIndex: nextPlayerIndex
+      };
+
+      if (newDeck.length === 0 && newHand.length === 0) {
+        updates[`players/${state.playerId}/score`] = newScore + 6;
+        updates.status = 'finished';
       }
 
-      console.log('Pending placements:', state.pendingPlacements);
-      console.log('Current board:', state.gameState.board);
-
-      try {
-        // Ensure board exists
-        const currentBoard = state.gameState.board || {};
-        
-        const validation = validatePlacement(state.pendingPlacements, currentBoard);
-        console.log('Validation result:', validation);
-        
-        if (!validation.valid) { 
-          alert(validation.reason); 
-          return; 
-        }
-
-        const newBoard = { ...currentBoard };
-        state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
-
-        const currentPlayer = state.gameState.players[state.playerId];
-        const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
-
-        let newDeck = [...state.gameState.deck];
-        const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
-        const drawnTiles = newDeck.splice(0, tilesToDraw);
-        newHand.push(...drawnTiles);
-
-        const newScore = currentPlayer.score + validation.score;
-        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
-
-        console.log('New score:', newScore, 'Points earned:', validation.score);
-        console.log('Next player index:', nextPlayerIndex);
-
-        const updates = {
-          board: newBoard,
-          deck: newDeck,
-          [`players/${state.playerId}/hand`]: newHand,
-          [`players/${state.playerId}/score`]: newScore,
-          currentPlayerIndex: nextPlayerIndex
-        };
-
-        if (newDeck.length === 0 && newHand.length === 0) {
-          updates[`players/${state.playerId}/score`] = newScore + 6;
-          updates.status = 'finished';
-        }
-
-        console.log('Updating Firebase with:', updates);
-        await db.ref(`games/${state.gameId}`).update(updates);
-        console.log('Firebase updated successfully!');
-        
-        state.pendingPlacements = [];
-        state.selectedTiles = [];
-        state.tileToPlace = null;
-        render();
-      } catch (error) {
-        console.error('Error in playTiles:', error);
-        alert('Error playing tiles: ' + error.message);
-      }
+      await db.ref(`games/${state.gameId}`).update(updates);
+      state.pendingPlacements = [];
+      state.selectedTiles = [];
+      render();
     }
 
     async function swapTiles() {
       if (state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length) {
-        alert('Cannot swap - not enough tiles in bag');
+        alert(t('cannotSwap'));
         return;
       }
 
@@ -758,7 +778,6 @@
       });
 
       state.selectedTiles = [];
-      state.tileToPlace = null;
       render();
     }
 
@@ -853,7 +872,7 @@
         if (!currentPlayer) {
           console.error('Current player not found! PlayerID:', state.playerId);
           console.error('Available players:', Object.keys(state.gameState.players));
-          app.innerHTML = '<div class="error-msg"><h2>Error</h2><p>Player data not found. Please refresh the page.</p></div>';
+          app.innerHTML = `<div class="error-msg"><h2>${t('firebaseInitError')}</h2><p>${t('playerNotFound')}</p></div>`;
           return;
         }
         
@@ -881,41 +900,34 @@
 
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
-            <h2>${t('title')}</h2>
-            <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
+            <h2>Qwirkle Game</h2>
+            <div><strong>Game ID:</strong> ${state.gameId} | <strong>Bag:</strong> ${state.gameState.deck.length} tiles</div>
           </div>
           <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
           ${state.gameState.status === 'finished' ? `
             <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
-              <strong>${t('gameOver')}</strong> ${t('winner')}: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
+              <strong>Game Over!</strong> Winner: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
             </div>
           ` : ''}
           ${isMyTurn && state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: ${isMyTurn ? '#27ae60' : '#95a5a6'};">
-              ${isMyTurn ? (state.tileToPlace ? `📍 ${t('clickToPlace')}` : state.selectedTiles.length > 0 ? `🔄 ${state.selectedTiles.length} ${t('tilesSelectedSwap')}` : `👆 ${t('clickTilePlace')}`) : `${currentTurnPlayer.name}${t('turn')}`}
+              ${isMyTurn ? (state.tileToPlace ? "📍 Click on the board to place your tile" : state.selectedTiles.length > 0 ? `🔄 ${state.selectedTiles.length} tiles selected for swap` : "👆 Click a tile, then click where to place it") : `${currentTurnPlayer.name}'s turn`}
             </div>
           ` : state.gameState.status === 'playing' ? `
             <div class="status-bar" style="background: #95a5a6;">
-              ${currentTurnPlayer.name}${t('turn')}
+              ${currentTurnPlayer.name}'s turn
             </div>
           ` : ''}
           <div class="board-container">
             <div style="display: inline-block; padding: 20px;" id="board"></div>
           </div>
-          <h3>${t('yourHand')}</h3>
+          <h3>Your Hand:</h3>
           <div class="hand-container" id="hand"></div>
           ${isMyTurn && state.gameState.status === 'playing' ? `
-            <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin: 15px 0; font-size: 14px;">
-              <strong>${t('howToPlay')}</strong><br>
-              • <strong>${t('placeOne')}</strong> ${t('placeOneDesc')}<br>
-              • <strong>${t('placeMultiple')}</strong> ${t('placeMultipleDesc')}<br>
-              • <strong>${t('swapTiles')}</strong> ${t('swapTilesDesc')}<br>
-              • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
-            </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
-              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
-              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
-              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
+              <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Play Tiles</button>
+              <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>Cancel</button>
+              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>Swap Selected (${state.selectedTiles.length})</button>
             </div>
           ` : ''}
         `;
@@ -955,32 +967,13 @@
             
             const cell = document.createElement('div');
             cell.className = 'board-cell';
-            const canPlace = isMyTurn && state.tileToPlace && !tile && !pending;
             cell.style.background = pending ? '#ffffcc' : tile ? 'white' : '#f8f9fa';
-            cell.style.cursor = canPlace ? 'pointer' : 'default';
             
-            // Hover effect for valid placement spots
-            if (canPlace) {
-              cell.onmouseenter = () => { cell.style.background = '#d4edda'; };
-              cell.onmouseleave = () => { cell.style.background = '#f8f9fa'; };
-            }
-            
-            // Click to place tile
-            cell.onclick = () => {
-              if (state.tileToPlace && isMyTurn && !tile && !pending) {
-                state.pendingPlacements.push({ row, col, tile: state.tileToPlace });
-                state.tileToPlace = null;
-                render();
-              }
-            };
-            
-            // Drag and drop (backup method)
             cell.ondragover = (e) => e.preventDefault();
             cell.ondrop = (e) => {
               e.preventDefault();
               if (state.draggedTile && isMyTurn && !tile && !pending) {
                 state.pendingPlacements.push({ row, col, tile: state.draggedTile });
-                state.draggedTile = null;
                 render();
               }
             };
@@ -1011,70 +1004,20 @@
         }
         if (currentPlayer.hand && Array.isArray(currentPlayer.hand)) {
           currentPlayer.hand.forEach(tile => {
-            const isSelectedForSwap = state.selectedTiles.find(t => t.id === tile.id);
-            const isSelectedForPlacement = state.tileToPlace && state.tileToPlace.id === tile.id;
-            const isAlreadyPlaced = state.pendingPlacements.find(p => p.tile.id === tile.id);
-            
-            if (isAlreadyPlaced) return; // Don't show tiles that are already placed
-            
+            const isSelected = state.selectedTiles.find(t => t.id === tile.id);
             const tileEl = renderTile(tile, {
               draggable: true,
-              selected: isSelectedForSwap,
+              selected: isSelected,
               onDragStart: () => { state.draggedTile = tile; },
               onClick: () => {
-                if (!isMyTurn) return;
-                
-                // If clicking the tile that's selected for placement, deselect it
-                if (isSelectedForPlacement) {
-                  state.tileToPlace = null;
-                  render();
-                  return;
-                }
-                
-                // If clicking a tile that's selected for swap, deselect it
-                if (isSelectedForSwap) {
+                if (isSelected) {
                   state.selectedTiles = state.selectedTiles.filter(t => t.id !== tile.id);
-                  // If we now have exactly 1 tile selected, make it placement mode
-                  if (state.selectedTiles.length === 1) {
-                    state.tileToPlace = state.selectedTiles[0];
-                    state.selectedTiles = [];
-                  }
-                  render();
-                  return;
-                }
-                
-                // If we already have tiles selected for swap, add this one too
-                if (state.selectedTiles.length > 0) {
+                } else {
                   state.selectedTiles.push(tile);
-                  render();
-                  return;
                 }
-                
-                // If we have a placement tile selected, switch to multi-select (swap mode)
-                if (state.tileToPlace) {
-                  state.selectedTiles = [state.tileToPlace, tile];
-                  state.tileToPlace = null;
-                  render();
-                  return;
-                }
-                
-                // Otherwise, select this tile for placement
-                state.tileToPlace = tile;
                 render();
               }
             });
-            
-            // Highlight tile selected for placement (green)
-            if (isSelectedForPlacement) {
-              tileEl.style.border = '3px solid #27ae60';
-              tileEl.style.boxShadow = '0 0 10px rgba(39, 174, 96, 0.5)';
-            }
-            
-            // Highlight tiles selected for swap (red)
-            if (isSelectedForSwap) {
-              tileEl.style.border = '3px solid #e74c3c';
-            }
-            
             handDiv.appendChild(tileEl);
           });
         }
@@ -1085,11 +1028,7 @@
           const cancelBtn = document.getElementById('cancelBtn');
           const swapBtn = document.getElementById('swapBtn');
           if (playBtn) playBtn.onclick = playTiles;
-          if (cancelBtn) cancelBtn.onclick = () => { 
-            state.pendingPlacements = []; 
-            state.tileToPlace = null;
-            render(); 
-          };
+          if (cancelBtn) cancelBtn.onclick = () => { state.pendingPlacements = []; render(); };
           if (swapBtn) swapBtn.onclick = swapTiles;
           console.log('Action buttons attached');
         }
