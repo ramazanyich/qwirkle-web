@@ -280,7 +280,10 @@
         differentBrowser: 'Using a different browser',
         firebaseInitError: 'Firebase Initialization Error',
         refreshTryAgain: 'Please refresh the page and try again.',
-        playerNotFound: 'Player data not found. Please refresh the page.'
+        playerNotFound: 'Player data not found. Please refresh the page.',
+        reconnecting: 'Reconnecting to your game...',
+        reconnectFailed: 'Could not reconnect to previous game.',
+        leaveGame: 'Leave Game'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -368,7 +371,10 @@
         differentBrowser: 'Использовать другой браузер',
         firebaseInitError: 'Ошибка инициализации Firebase',
         refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
-        playerNotFound: 'Данные игрока не найдены. Пожалуйста, обновите страницу.'
+        playerNotFound: 'Данные игрока не найдены. Пожалуйста, обновите страницу.',
+        reconnecting: 'Переподключение к вашей игре...',
+        reconnectFailed: 'Не удалось переподключиться к предыдущей игре.',
+        leaveGame: 'Выйти из игры'
       }
     };
 
@@ -495,7 +501,12 @@
       const div = document.createElement('div');
       div.className = 'tile' + (options.selected ? ' selected' : '');
       div.draggable = options.draggable || false;
-      div.style.color = COLOR_MAP[tile.color];
+      
+      // Force color with !important by using setAttribute
+      const color = COLOR_MAP[tile.color];
+      div.style.setProperty('color', color, 'important');
+      div.style.setProperty('-webkit-text-fill-color', color, 'important'); // For WebKit browsers
+      
       div.textContent = SHAPE_ICONS[tile.shape];
       if (options.onClick) div.onclick = options.onClick;
       if (options.onDragStart) div.ondragstart = options.onDragStart;
@@ -844,6 +855,16 @@
       const app = document.getElementById('app');
       app.innerHTML = '';
 
+      if (state.reconnecting) {
+        app.innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <h1>${t('reconnecting')}</h1>
+            <p style="color: #7f8c8d; margin-top: 20px;">Game ID: ${state.gameId}</p>
+          </div>
+        `;
+        return;
+      }
+
       if (state.screen === 'menu') {
         app.innerHTML = `
           <div style="text-align: right; margin-bottom: 20px;">
@@ -891,6 +912,7 @@
           <div id="playerList"></div>
           ${isHost && playerCount >= 2 ? `<button class="btn-green" id="startBtn">${t('startGame')}</button>` : ''}
           ${!isHost ? `<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">${t('waitingHost')}</p>` : ''}
+          <button class="btn-red" id="leaveBtn" style="margin-top: 10px;">${t('leaveGame')}</button>
         `;
 
         const playerList = document.getElementById('playerList');
@@ -905,6 +927,8 @@
         if (isHost && playerCount >= 2) {
           document.getElementById('startBtn').onclick = startGame;
         }
+        
+        document.getElementById('leaveBtn').onclick = leaveGame;
       }
 
       else if (state.screen === 'game' && state.gameState) {
@@ -936,7 +960,10 @@
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
             <h2>${t('title')}</h2>
-            <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
+              <button onclick="leaveGame()" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">${t('leaveGame')}</button>
+            </div>
           </div>
           <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
           ${state.gameState.status === 'finished' ? `
@@ -966,7 +993,6 @@
               • <strong>${t('swapTiles')}</strong> ${t('swapTilesDesc')}<br>
               • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
             </div>
-            <button onclick="debugCrossTiles()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">🔍 Debug Clover Tiles</button>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
               <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
               <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
