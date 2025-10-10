@@ -342,6 +342,9 @@
     function validatePlacement(placements, board) {
       if (placements.length === 0) return { valid: false, reason: 'No tiles placed' };
 
+      // Ensure board is an object, even if it's undefined/null
+      board = board || {};
+      
       const newBoard = { ...board };
       placements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
 
@@ -431,6 +434,9 @@
     }
 
     function calculateScore(placements, board) {
+      // Ensure board is an object
+      board = board || {};
+      
       let totalScore = 0;
       const scoredLines = new Set();
 
@@ -484,7 +490,10 @@
       console.log('Current board:', state.gameState.board);
 
       try {
-        const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
+        // Ensure board exists
+        const currentBoard = state.gameState.board || {};
+        
+        const validation = validatePlacement(state.pendingPlacements, currentBoard);
         console.log('Validation result:', validation);
         
         if (!validation.valid) { 
@@ -492,7 +501,7 @@
           return; 
         }
 
-        const newBoard = { ...state.gameState.board };
+        const newBoard = { ...currentBoard };
         state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
 
         const currentPlayer = state.gameState.players[state.playerId];
