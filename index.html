@@ -473,43 +473,67 @@
     }
 
     async function playTiles() {
-      if (state.pendingPlacements.length === 0) return;
-
-      const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
-      if (!validation.valid) { alert(validation.reason); return; }
-
-      const newBoard = { ...state.gameState.board };
-      state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
-
-      const currentPlayer = state.gameState.players[state.playerId];
-      const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
-
-      let newDeck = [...state.gameState.deck];
-      const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
-      const drawnTiles = newDeck.splice(0, tilesToDraw);
-      newHand.push(...drawnTiles);
-
-      const newScore = currentPlayer.score + validation.score;
-      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
-
-      const updates = {
-        board: newBoard,
-        deck: newDeck,
-        [`players/${state.playerId}/hand`]: newHand,
-        [`players/${state.playerId}/score`]: newScore,
-        currentPlayerIndex: nextPlayerIndex
-      };
-
-      if (newDeck.length === 0 && newHand.length === 0) {
-        updates[`players/${state.playerId}/score`] = newScore + 6;
-        updates.status = 'finished';
+      console.log('Play tiles clicked');
+      
+      if (state.pendingPlacements.length === 0) {
+        console.log('No pending placements');
+        return;
       }
 
-      await db.ref(`games/${state.gameId}`).update(updates);
-      state.pendingPlacements = [];
-      state.selectedTiles = [];
-      state.tileToPlace = null;
-      render();
+      console.log('Pending placements:', state.pendingPlacements);
+      console.log('Current board:', state.gameState.board);
+
+      try {
+        const validation = validatePlacement(state.pendingPlacements, state.gameState.board);
+        console.log('Validation result:', validation);
+        
+        if (!validation.valid) { 
+          alert(validation.reason); 
+          return; 
+        }
+
+        const newBoard = { ...state.gameState.board };
+        state.pendingPlacements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
+
+        const currentPlayer = state.gameState.players[state.playerId];
+        const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
+
+        let newDeck = [...state.gameState.deck];
+        const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
+        const drawnTiles = newDeck.splice(0, tilesToDraw);
+        newHand.push(...drawnTiles);
+
+        const newScore = currentPlayer.score + validation.score;
+        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+
+        console.log('New score:', newScore, 'Points earned:', validation.score);
+        console.log('Next player index:', nextPlayerIndex);
+
+        const updates = {
+          board: newBoard,
+          deck: newDeck,
+          [`players/${state.playerId}/hand`]: newHand,
+          [`players/${state.playerId}/score`]: newScore,
+          currentPlayerIndex: nextPlayerIndex
+        };
+
+        if (newDeck.length === 0 && newHand.length === 0) {
+          updates[`players/${state.playerId}/score`] = newScore + 6;
+          updates.status = 'finished';
+        }
+
+        console.log('Updating Firebase with:', updates);
+        await db.ref(`games/${state.gameId}`).update(updates);
+        console.log('Firebase updated successfully!');
+        
+        state.pendingPlacements = [];
+        state.selectedTiles = [];
+        state.tileToPlace = null;
+        render();
+      } catch (error) {
+        console.error('Error in playTiles:', error);
+        alert('Error playing tiles: ' + error.message);
+      }
     }
 
     async function swapTiles() {
