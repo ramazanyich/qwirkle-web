@@ -352,97 +352,100 @@
     }
 
     async function createGame() {
-      const name = document.getElementById('nameInput').value.trim();
-      if (!name) {
+      if (!state.playerName.trim()) {
         alert('Please enter your name');
         return;
       }
-
-      const gameId = generateGameId();
-      const playerId = state.playerId || generatePlayerId();
       
-      const deck = createDeck();
-      const initialHand = deck.splice(0, 6);
+      try {
+        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+        state.playerId = newPlayerId;
+        localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-      await db.ref(`games/${gameId}`).set({
-        status: 'lobby',
-        host: playerId,
-        deck: deck,
-        board: {},
-        players: {
-          [playerId]: {
-            name: name,
-            hand: initialHand,
-            score: 0
-          }
-        },
-        playerOrder: [playerId],
-        currentPlayerIndex: 0,
-        lastMove: null,
-        createdAt: Date.now()
-      });
+        const deck = createDeck();
+        const player1Hand = deck.splice(0, 6);
+        
+        const newGameRef = db.ref('games').push();
+        const newGameId = newGameRef.key;
+        
+        await newGameRef.set({
+          players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
+          deck: deck,
+          board: {},
+          currentPlayerIndex: 0,
+          playerOrder: [newPlayerId],
+          status: 'waiting',
+          createdAt: Date.now(),
+          lastMove: null
+        });
 
-      state.playerId = playerId;
-      state.playerName = name;
-      state.gameId = gameId;
-      localStorage.setItem('qwirklePlayerId', playerId);
-      
-      state.screen = 'lobby';
-      render();
-      listenToGame(gameId);
+        state.gameId = newGameId;
+        state.screen = 'lobby';
+        render();
+        listenToGame();
+      } catch (error) {
+        console.error('Error creating game:', error);
+        alert('Error creating game: ' + error.message);
+      }
     }
 
     async function joinGame() {
-      const gameId = document.getElementById('gameIdInput').value.trim().toUpperCase();
-      const name = document.getElementById('nameInput').value.trim();
-      
-      if (!gameId || !name) {
+      if (!state.playerName.trim() || !state.gameId.trim()) {
         alert('Please enter both game ID and your name');
         return;
       }
-
-      const gameSnapshot = await db.ref(`games/${gameId}`).once('value');
-      if (!gameSnapshot.exists()) {
-        alert('Game not found!');
-        return;
-      }
-
-      const game = gameSnapshot.val();
-      if (game.status !== 'lobby') {
-        alert('This game has already started!');
-        return;
-      }
-
-      const playerId = state.playerId || generatePlayerId();
       
-      const deck = game.deck;
-      const hand = deck.splice(0, 6);
+      try {
+        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+        state.playerId = newPlayerId;
+        localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-      await db.ref(`games/${gameId}/players/${playerId}`).set({
-        name: name,
-        hand: hand,
-        score: 0
-      });
+        const snapshot = await db.ref(`games/${state.gameId}`).once('value');
+        const game = snapshot.val();
+        
+        if (!game) {
+          alert('Game not found!');
+          return;
+        }
+        
+        if (game.status !== 'waiting') {
+          alert('Game already started!');
+          return;
+        }
 
-      await db.ref(`games/${gameId}/deck`).set(deck);
-      await db.ref(`games/${gameId}/playerOrder`).set([...game.playerOrder, playerId]);
+        const deck = game.deck;
+        const newHand = deck.splice(0, 6);
+        
+        await db.ref(`games/${state.gameId}/players/${newPlayerId}`).set({
+          name: state.playerName,
+          hand: newHand,
+          score: 0,
+          order: Object.keys(game.players).length
+        });
+        
+        await db.ref(`games/${state.gameId}/deck`).set(deck);
+        await db.ref(`games/${state.gameId}/playerOrder/${Object.keys(game.players).length}`).set(newPlayerId);
 
-      state.playerId = playerId;
-      state.playerName = name;
-      state.gameId = gameId;
-      localStorage.setItem('qwirklePlayerId', playerId);
-      
-      state.screen = 'lobby';
-      render();
-      listenToGame(gameId);
+        state.screen = 'lobby';
+        render();
+        listenToGame();
+      } catch (error) {
+        console.error('Error joining game:', error);
+        alert('Error joining game: ' + error.message);
+      }
     }
 
     async function startGame() {
-      await db.ref(`games/${state.gameId}/status`).set('playing');
+      try {
+        await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
+        state.screen = 'game';
+      } catch (error) {
+        alert('Error starting game: ' + error.message);
+      }
     }
 
-    function listenToGame(gameId) {
-      db.ref(`games/${gameId}`).on('value', (snapshot) => {
+    function listenToGame() {
+      db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
         if (!snapshot.exists()) {
           alert('Game no longer exists');
           state.screen = 'menu';
@@ -453,7 +456,7 @@
         const game = snapshot.val();
         state.gameState = game;
 
-        if (game.status === 'lobby') {
+        if (game.status === 'waiting') {
           state.screen = 'lobby';
         } else if (game.status === 'playing' || game.status === 'finished') {
           state.screen = 'game';
@@ -789,55 +792,68 @@
             </button>
           </div>
           <h1 style="text-align: center;">${t('title')}</h1>
-          <input type="text" id="nameInput" placeholder="${t('yourName')}" value="${state.playerName}">
-          <button class="btn-green" id="createBtn">${t('createGame')}</button>
-          <div style="text-align: center; margin: 20px 0; color: #7f8c8d;">${t('or')}</div>
-          <input type="text" id="gameIdInput" placeholder="${t('gameId')}" style="text-transform: uppercase;">
-          <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
+          <div style="max-width: 500px; margin: 0 auto;">
+            <input type="text" id="playerName" placeholder="${t('yourName')}" value="${state.playerName}">
+            <button class="btn-green" id="createBtn">${t('createGame')}</button>
+            <div style="margin: 20px 0; text-align: center; color: #7f8c8d;">${t('or')}</div>
+            <input type="text" id="gameIdInput" placeholder="${t('gameId')}" value="${state.gameId}">
+            <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
+          </div>
         `;
-
-        document.getElementById('createBtn').onclick = createGame;
-        document.getElementById('joinBtn').onclick = joinGame;
+        
+        const nameInput = document.getElementById('playerName');
+        const gameInput = document.getElementById('gameIdInput');
+        const createBtn = document.getElementById('createBtn');
+        const joinBtn = document.getElementById('joinBtn');
+        
+        window.toggleLanguage = toggleLanguage;
+        
+        nameInput.oninput = (e) => state.playerName = e.target.value;
+        gameInput.oninput = (e) => state.gameId = e.target.value;
+        createBtn.onclick = createGame;
+        joinBtn.onclick = joinGame;
         
         // Auto-focus name input
         setTimeout(() => document.getElementById('nameInput')?.focus(), 100);
       }
-      else if (state.screen === 'lobby') {
-        const isHost = state.gameState.host === state.playerId;
+      else if (state.screen === 'lobby' && state.gameState) {
+        const isHost = state.gameState.playerOrder[0] === state.playerId;
+        const playerCount = Object.keys(state.gameState.players).length;
+
         app.innerHTML = `
-          <h1>${t('gameLobby')}</h1>
+          <h1 style="text-align: center;">${t('gameLobby')}</h1>
           <div class="game-id">
-            <strong>${t('gameId')}:</strong> ${state.gameId}<br>
-            <small>${t('shareId')}</small>
+            <strong>${t('gameId')}:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
+            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">${t('shareId')}</p>
           </div>
-          <h2>${t('players')}:</h2>
-          <div id="playersList"></div>
-          ${!isHost ? `<p style="margin-top: 20px; color: #7f8c8d;">${t('waitingHost')}</p>` : ''}
-          ${isHost ? `<button class="btn-green" id="startBtn" ${Object.keys(state.gameState.players).length < 2 ? 'disabled' : ''}>${t('startGame')}</button>` : ''}
+          <h3>${t('players')} (${playerCount}/4):</h3>
+          <div id="playerList"></div>
+          ${isHost && playerCount >= 2 ? `<button class="btn-green" id="startBtn">${t('startGame')}</button>` : ''}
+          ${!isHost ? `<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">${t('waitingHost')}</p>` : ''}
         `;
 
-        const playersList = document.getElementById('playersList');
-        Object.entries(state.gameState.players).forEach(([pid, player]) => {
+        const playerList = document.getElementById('playerList');
+        Object.entries(state.gameState.players).forEach(([id, player]) => {
           const div = document.createElement('div');
           div.className = 'player-card';
           div.style.background = '#ecf0f1';
-          div.textContent = `${player.name}${pid === state.gameState.host ? ' 👑' : ''}`;
-          playersList.appendChild(div);
+          div.textContent = `${player.name}${id === state.playerId ? ' (You)' : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
+          playerList.appendChild(div);
         });
 
-        if (isHost) {
+        if (isHost && playerCount >= 2) {
           document.getElementById('startBtn').onclick = startGame;
         }
       }
-      else if (state.screen === 'game') {
-        console.log('Rendering game screen');
-        const board = state.gameState.board || {};
+      else if (state.screen === 'game' && state.gameState) {
         const currentPlayer = state.gameState.players[state.playerId];
         
         if (!currentPlayer) {
-          console.error('Current player not found!');
+          app.innerHTML = `<div class="error-msg"><h2>Error</h2><p>Player data not found. Please refresh the page.</p></div>`;
           return;
         }
+
+        const board = state.gameState.board || {};
 
         // Calculate board dimensions
         let minRow = 0, maxRow = 0, minCol = 0, maxCol = 0;
