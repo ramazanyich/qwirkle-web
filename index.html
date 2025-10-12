@@ -260,54 +260,54 @@
         refreshTryAgain: 'Please refresh the page to try again.',
         language: 'Language'
       },
-      pl: {
-        title: 'Qwirkle Online',
-        yourName: 'Twoje imię',
-        createGame: 'Utwórz nową grę',
-        or: 'LUB',
-        gameId: 'ID Gry',
-        joinGame: 'Dołącz do gry',
-        gameLobby: 'Poczekalnia',
-        shareId: 'Udostępnij to ID znajomym!',
-        players: 'Gracze',
-        waitingHost: 'Czekam aż gospodarz rozpocznie grę...',
-        startGame: 'Rozpocznij grę',
-        bag: 'Woreczek',
-        tiles: 'kafelków',
-        gameOver: 'Koniec gry!',
-        winner: 'Zwycięzca',
-        yourTurn: 'Twoja kolej!',
-        turn: ' - kolej',
-        yourHand: 'Twoje kafelki',
-        howToPlay: 'Jak grać:',
-        placeOne: 'Położ jeden kafelek:',
-        placeOneDesc: 'Kliknij kafelek w ręce, następnie kliknij puste miejsce na planszy',
-        placeMultiple: 'Położ wiele kafelków:',
-        placeMultipleDesc: 'Kliknij wiele kafelków (staną się czerwone), następnie kliknij "Zagraj"',
-        swapTiles: 'Wymień kafelki:',
-        swapTilesDesc: 'Wybierz kafelki (staną się czerwone), następnie kliknij "Wymień"',
-        removeTile: 'Usuń położony kafelek:',
-        removeTileDesc: 'Kliknij na żółty kafelek aby go usunąć z planszy',
-        playButton: 'Zagraj',
-        clearBoard: 'Wyczyść planszę',
-        swap: 'Wymień',
-        tile: 'kafelek',
-        pts: 'pkt',
-        clickTilePlace: 'Kliknij kafelek aby go położyć, lub wybierz wiele do wymiany',
-        clickToPlace: 'Kliknij na planszę aby położyć kafelek',
-        tilesSelectedSwap: 'kafelków zaznaczonych. Kliknij "Wymień" lub zaznacz więcej.',
-        firebaseError: 'Nie udało się załadować Firebase',
-        firebaseErrorDesc: 'Nie można połączyć się z serwerem gry. Może to być spowodowane:',
-        poorConnection: 'Słabym połączeniem internetowym',
-        firewall: 'Firewallem lub ograniczeniami sieciowymi blokującymi Firebase',
-        browserSettings: 'Ustawieniami przeglądarki blokującymi skrypty',
-        tryRefresh: 'Spróbuj tych rozwiązań:',
-        refreshPage: 'Odśwież stronę',
-        disableAdblock: 'Tymczasowo wyłącz blokady reklam',
-        differentBrowser: 'Spróbuj innej przeglądarki',
-        firebaseInitError: 'Błąd inicjalizacji Firebase',
-        refreshTryAgain: 'Odśwież stronę aby spróbować ponownie.',
-        language: 'Język'
+      ru: {
+        title: 'Qwirkle Онлайн',
+        yourName: 'Ваше имя',
+        createGame: 'Создать новую игру',
+        or: 'ИЛИ',
+        gameId: 'ID игры',
+        joinGame: 'Присоединиться к игре',
+        gameLobby: 'Лобби игры',
+        shareId: 'Поделитесь этим ID с друзьями!',
+        players: 'Игроки',
+        waitingHost: 'Ожидание начала игры хостом...',
+        startGame: 'Начать игру',
+        bag: 'Мешок',
+        tiles: 'фишек',
+        gameOver: 'Игра окончена!',
+        winner: 'Победитель',
+        yourTurn: 'Ваш ход!',
+        turn: ' ходит',
+        yourHand: 'Ваши фишки',
+        howToPlay: 'Как играть:',
+        placeOne: 'Поставить одну фишку:',
+        placeOneDesc: 'Нажмите на фишку (зелёное свечение), затем на доску',
+        placeMultiple: 'Поставить несколько фишек:',
+        placeMultipleDesc: 'Перетащите фишки из руки на доску',
+        swapTiles: 'Обменять фишки:',
+        swapTilesDesc: 'Нажмите на 2+ фишки (красная рамка), затем "Обменять"',
+        removeTile: 'Убрать поставленную фишку:',
+        removeTileDesc: 'Нажмите на жёлтую фишку на доске',
+        playButton: 'Сыграть',
+        clearBoard: 'Очистить доску',
+        swap: 'Обменять',
+        tile: 'фишку',
+        pts: 'очк.',
+        clickTilePlace: 'Нажмите на фишку, затем куда её поставить',
+        clickToPlace: 'Нажмите на доску, чтобы поставить фишку',
+        tilesSelectedSwap: 'фишек выбрано для обмена',
+        firebaseError: 'Ошибка загрузки Firebase',
+        firebaseErrorDesc: 'Библиотека Firebase не загрузилась. Это может быть из-за:',
+        poorConnection: 'Плохого интернет-соединения',
+        firewall: 'Блокировки скриптов файрволом или блокировщиком рекламы',
+        browserSettings: 'Настроек безопасности браузера',
+        tryRefresh: 'Попробуйте:',
+        refreshPage: 'Обновить страницу',
+        disableAdblock: 'Отключить блокировщики рекламы',
+        differentBrowser: 'Использовать другой браузер',
+        firebaseInitError: 'Ошибка инициализации Firebase',
+        refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
+        language: 'Язык'
       }
     };
 
@@ -315,9 +315,9 @@
       return translations[state.language][key] || translations.en[key] || key;
     }
 
-    function setLanguage(lang) {
-      state.language = lang;
-      localStorage.setItem('qwirkleLanguage', lang);
+    function toggleLanguage() {
+      state.language = state.language === 'en' ? 'ru' : 'en';
+      localStorage.setItem('qwirkleLanguage', state.language);
       render();
     }
 
@@ -783,14 +783,12 @@
       
       if (state.screen === 'menu') {
         app.innerHTML = `
-          <h1>${t('title')}</h1>
           <div style="text-align: right; margin-bottom: 20px;">
-            <label>${t('language')}: </label>
-            <select id="langSelect" style="width: auto; padding: 8px;">
-              <option value="en" ${state.language === 'en' ? 'selected' : ''}>English</option>
-              <option value="pl" ${state.language === 'pl' ? 'selected' : ''}>Polski</option>
-            </select>
+            <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer;">
+              ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
+            </button>
           </div>
+          <h1 style="text-align: center;">${t('title')}</h1>
           <input type="text" id="nameInput" placeholder="${t('yourName')}" value="${state.playerName}">
           <button class="btn-green" id="createBtn">${t('createGame')}</button>
           <div style="text-align: center; margin: 20px 0; color: #7f8c8d;">${t('or')}</div>
@@ -798,9 +796,6 @@
           <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
         `;
 
-        document.getElementById('langSelect').onchange = (e) => {
-          setLanguage(e.target.value);
-        };
         document.getElementById('createBtn').onclick = createGame;
         document.getElementById('joinBtn').onclick = joinGame;
         
