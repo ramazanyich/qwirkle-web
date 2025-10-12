@@ -261,7 +261,9 @@
         refreshTryAgain: 'Please refresh the page to try again.',
         language: 'Language',
         reconnecting: 'Reconnecting to your game...',
-        pleaseWait: 'Please wait...'
+        pleaseWait: 'Please wait...',
+        leaveGame: 'Leave Game',
+        confirmLeave: 'Are you sure you want to leave this game? You will not be able to rejoin.'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -312,7 +314,9 @@
         refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
         language: 'Язык',
         reconnecting: 'Переподключение к вашей игре...',
-        pleaseWait: 'Пожалуйста, подождите...'
+        pleaseWait: 'Пожалуйста, подождите...',
+        leaveGame: 'Выйти из игры',
+        confirmLeave: 'Вы уверены, что хотите выйти из игры? Вы не сможете вернуться.'
       }
     };
 
@@ -456,6 +460,37 @@
       } catch (error) {
         alert('Error starting game: ' + error.message);
       }
+    }
+
+    function leaveGame() {
+      // Confirm before leaving
+      if (!confirm(t('confirmLeave'))) {
+        return;
+      }
+
+      // Stop listening to the current game
+      if (state.gameId) {
+        db.ref(`games/${state.gameId}`).off();
+      }
+
+      // Clear all game state
+      state.gameId = '';
+      state.playerId = '';
+      state.playerName = '';
+      state.gameState = null;
+      state.selectedTiles = [];
+      state.pendingPlacements = [];
+      state.draggedTile = null;
+      state.tileToPlace = null;
+      state.screen = 'menu';
+
+      // Clear localStorage
+      localStorage.removeItem('qwirkleGameId');
+      localStorage.removeItem('qwirklePlayerId');
+      localStorage.removeItem('qwirklePlayerName');
+
+      // Render menu
+      render();
     }
 
     async function tryReconnect() {
@@ -896,6 +931,7 @@
           <div id="playerList"></div>
           ${isHost && playerCount >= 2 ? `<button class="btn-green" id="startBtn">${t('startGame')}</button>` : ''}
           ${!isHost ? `<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">${t('waitingHost')}</p>` : ''}
+          <button class="btn-red" id="leaveBtn" style="margin-top: 10px;">${t('leaveGame')}</button>
         `;
 
         const playerList = document.getElementById('playerList');
@@ -910,6 +946,8 @@
         if (isHost && playerCount >= 2) {
           document.getElementById('startBtn').onclick = startGame;
         }
+        
+        document.getElementById('leaveBtn').onclick = leaveGame;
       }
       else if (state.screen === 'game' && state.gameState) {
         const currentPlayer = state.gameState.players[state.playerId];
@@ -986,6 +1024,9 @@
               <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
             </div>
           ` : ''}
+          <div style="margin-top: 20px;">
+            <button class="btn-red" id="leaveGameBtn" style="width: auto; padding: 10px 20px;">🚪 ${t('leaveGame')}</button>
+          </div>
         `;
 
         console.log('HTML structure created, populating scores...');
@@ -1170,6 +1211,10 @@
           };
           if (swapBtn) swapBtn.onclick = swapTiles;
         }
+        
+        // Add leave game button handler
+        const leaveGameBtn = document.getElementById('leaveGameBtn');
+        if (leaveGameBtn) leaveGameBtn.onclick = leaveGame;
       }
     }
 
