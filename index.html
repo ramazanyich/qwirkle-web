@@ -579,36 +579,65 @@
       for (const line of linesToCheck) {
         const [type, pos] = line.split('-');
         const position = parseInt(pos);
-        const tiles = [];
+        
+        // Find all contiguous segments in this line
+        const segments = [];
+        let currentSegment = [];
         
         if (type === 'row') {
           for (let c = -50; c <= 50; c++) {
             const tile = newBoard[`${position},${c}`];
-            if (tile) tiles.push(tile);
-            else if (tiles.length > 0) break;
+            if (tile) {
+              currentSegment.push(tile);
+            } else if (currentSegment.length > 0) {
+              segments.push([...currentSegment]);
+              currentSegment = [];
+            }
           }
         } else {
           for (let r = -50; r <= 50; r++) {
             const tile = newBoard[`${r},${position}`];
-            if (tile) tiles.push(tile);
-            else if (tiles.length > 0) break;
+            if (tile) {
+              currentSegment.push(tile);
+            } else if (currentSegment.length > 0) {
+              segments.push([...currentSegment]);
+              currentSegment = [];
+            }
           }
         }
+        if (currentSegment.length > 0) segments.push(currentSegment);
+        
+        // Validate each contiguous segment
+        for (const tiles of segments) {
+          if (tiles.length > 6) return { valid: false, reason: 'Line cannot be longer than 6' };
 
-        if (tiles.length > 6) return { valid: false, reason: 'Line cannot be longer than 6' };
+          if (tiles.length > 1) {
+            const colors = tiles.map(t => t.color);
+            const shapes = tiles.map(t => t.shape);
+            const uniqueColors = new Set(colors);
+            const uniqueShapes = new Set(shapes);
 
-        if (tiles.length > 1) {
-          const colors = tiles.map(t => t.color);
-          const shapes = tiles.map(t => t.shape);
-          const uniqueColors = new Set(colors);
-          const uniqueShapes = new Set(shapes);
+            const allSameColor = uniqueColors.size === 1;
+            const allSameShape = uniqueShapes.size === 1;
 
-          const allSameColor = uniqueColors.size === 1;
-          const allSameShape = uniqueShapes.size === 1;
-
-          if (!allSameColor && !allSameShape) return { valid: false, reason: 'Line must share color or shape' };
-          if (allSameColor && uniqueShapes.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles in line' };
-          if (allSameShape && uniqueColors.size !== tiles.length) return { valid: false, reason: 'Duplicate tiles in line' };
+            // Must be either all same color OR all same shape
+            if (!allSameColor && !allSameShape) {
+              console.log('Line validation failed - mixed attributes:', { colors, shapes, line });
+              return { valid: false, reason: 'Line must share color or shape' };
+            }
+            
+            // If all same color, all shapes must be different (no duplicate shapes)
+            if (allSameColor && uniqueShapes.size !== tiles.length) {
+              console.log('Duplicate shapes detected in line', line, ':', shapes);
+              return { valid: false, reason: 'Duplicate tiles - same color requires different shapes' };
+            }
+            
+            // If all same shape, all colors must be different (no duplicate colors)
+            if (allSameShape && uniqueColors.size !== tiles.length) {
+              console.log('Duplicate colors detected in line', line, ':', colors);
+              return { valid: false, reason: 'Duplicate tiles - same shape requires different colors' };
+            }
+          }
         }
       }
 
