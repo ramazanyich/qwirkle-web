@@ -1035,17 +1035,53 @@
           console.error('Scores div not found!');
           return;
         }
+        
+        // Create a header for the players section
+        const playersHeader = document.createElement('h2');
+        playersHeader.textContent = t('players');
+        playersHeader.style.marginBottom = '10px';
+        scoresDiv.appendChild(playersHeader);
+        
+        const playersContainer = document.createElement('div');
+        playersContainer.style.display = 'flex';
+        playersContainer.style.flexWrap = 'wrap';
+        playersContainer.style.gap = '10px';
+        
         state.gameState.playerOrder.forEach((pid, idx) => {
           const p = state.gameState.players[pid];
           const isCurrent = idx === state.gameState.currentPlayerIndex;
+          const isYou = pid === state.playerId;
+          
           const card = document.createElement('div');
           card.className = 'player-card';
           card.style.background = isCurrent ? '#3498db' : '#ecf0f1';
           card.style.color = isCurrent ? 'white' : 'black';
-          if (pid === state.playerId) card.style.border = '3px solid #27ae60';
-          card.textContent = `${p.name}: ${p.score} ${t('pts')}${isCurrent ? ' 🎯' : ''}`;
-          scoresDiv.appendChild(card);
+          card.style.padding = '15px 20px';
+          card.style.borderRadius = '8px';
+          card.style.fontWeight = 'bold';
+          card.style.fontSize = '16px';
+          
+          if (isYou) {
+            card.style.border = '3px solid #27ae60';
+            card.style.boxShadow = '0 0 10px rgba(39, 174, 96, 0.3)';
+          }
+          
+          const nameSpan = document.createElement('div');
+          nameSpan.textContent = `${p.name}${isYou ? ' (You)' : ''}${isCurrent ? ' 🎯' : ''}`;
+          nameSpan.style.fontSize = '18px';
+          nameSpan.style.marginBottom = '5px';
+          
+          const scoreSpan = document.createElement('div');
+          scoreSpan.textContent = `${t('pts')}: ${p.score}`;
+          scoreSpan.style.fontSize = '14px';
+          scoreSpan.style.opacity = '0.9';
+          
+          card.appendChild(nameSpan);
+          card.appendChild(scoreSpan);
+          playersContainer.appendChild(card);
         });
+        
+        scoresDiv.appendChild(playersContainer);
         console.log('Scores populated');
 
         console.log('Creating board...');
