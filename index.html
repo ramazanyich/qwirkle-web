@@ -207,7 +207,8 @@
       pendingPlacements: [],
       draggedTile: null,
       tileToPlace: null,  // For click-to-place mode
-      language: localStorage.getItem('qwirkleLanguage') || 'en'
+      language: localStorage.getItem('qwirkleLanguage') || 'en',
+      reconnecting: false
     };
 
     const translations = {
@@ -258,7 +259,9 @@
         differentBrowser: 'Try a different browser',
         firebaseInitError: 'Firebase Initialization Error',
         refreshTryAgain: 'Please refresh the page to try again.',
-        language: 'Language'
+        language: 'Language',
+        reconnecting: 'Reconnecting to your game...',
+        pleaseWait: 'Please wait...'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -307,7 +310,9 @@
         differentBrowser: 'Использовать другой браузер',
         firebaseInitError: 'Ошибка инициализации Firebase',
         refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
-        language: 'Язык'
+        language: 'Язык',
+        reconnecting: 'Переподключение к вашей игре...',
+        pleaseWait: 'Пожалуйста, подождите...'
       }
     };
 
@@ -380,6 +385,11 @@
         });
 
         state.gameId = newGameId;
+        
+        // Save to localStorage for reconnection
+        localStorage.setItem('qwirkleGameId', newGameId);
+        localStorage.setItem('qwirklePlayerName', state.playerName);
+        
         state.screen = 'lobby';
         render();
         listenToGame();
@@ -426,6 +436,10 @@
         await db.ref(`games/${state.gameId}/deck`).set(deck);
         await db.ref(`games/${state.gameId}/playerOrder/${Object.keys(game.players).length}`).set(newPlayerId);
 
+        // Save to localStorage for reconnection
+        localStorage.setItem('qwirkleGameId', state.gameId);
+        localStorage.setItem('qwirklePlayerName', state.playerName);
+
         state.screen = 'lobby';
         render();
         listenToGame();
@@ -441,6 +455,64 @@
         state.screen = 'game';
       } catch (error) {
         alert('Error starting game: ' + error.message);
+      }
+    }
+
+    async function tryReconnect() {
+      const savedGameId = localStorage.getItem('qwirkleGameId');
+      const savedPlayerId = localStorage.getItem('qwirklePlayerId');
+      const savedPlayerName = localStorage.getItem('qwirklePlayerName');
+
+      if (!savedGameId || !savedPlayerId || !savedPlayerName) {
+        return false;
+      }
+
+      try {
+        state.reconnecting = true;
+        render();
+
+        const snapshot = await db.ref(`games/${savedGameId}`).once('value');
+        const game = snapshot.val();
+
+        if (!game) {
+          // Game no longer exists
+          localStorage.removeItem('qwirkleGameId');
+          localStorage.removeItem('qwirklePlayerName');
+          state.reconnecting = false;
+          return false;
+        }
+
+        // Check if player is in the game
+        if (!game.players[savedPlayerId]) {
+          // Player not in game
+          localStorage.removeItem('qwirkleGameId');
+          localStorage.removeItem('qwirklePlayerName');
+          state.reconnecting = false;
+          return false;
+        }
+
+        // Successfully reconnected
+        state.gameId = savedGameId;
+        state.playerId = savedPlayerId;
+        state.playerName = savedPlayerName;
+        state.gameState = game;
+        state.reconnecting = false;
+
+        if (game.status === 'waiting') {
+          state.screen = 'lobby';
+        } else {
+          state.screen = 'game';
+        }
+
+        listenToGame();
+        render();
+        return true;
+      } catch (error) {
+        console.error('Reconnection error:', error);
+        state.reconnecting = false;
+        localStorage.removeItem('qwirkleGameId');
+        localStorage.removeItem('qwirklePlayerName');
+        return false;
       }
     }
 
@@ -738,6 +810,16 @@
     function render() {
       console.log('Rendering screen:', state.screen);
       const app = document.getElementById('app');
+      
+      if (state.reconnecting) {
+        app.innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <h1>🔄 ${t('reconnecting')}</h1>
+            <p style="color: #7f8c8d; margin-top: 20px;">${t('pleaseWait')}</p>
+          </div>
+        `;
+        return;
+      }
       
       if (state.screen === 'menu') {
         app.innerHTML = `
@@ -1062,11 +1144,14 @@
       }
     }
 
-    // Wait for scripts to load, then render
-    window.addEventListener('load', () => {
-      console.log('Window loaded, rendering menu');
-      setTimeout(() => {
-        render();
+    // Wait for scripts to load, then try to reconnect or render menu
+    window.addEventListener('load', async () => {
+      console.log('Window loaded');
+      setTimeout(async () => {
+        const reconnected = await tryReconnect();
+        if (!reconnected) {
+          render();
+        }
       }, 100);
     });
   </script>
