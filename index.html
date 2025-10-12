@@ -55,6 +55,23 @@
       user-select: none;
     }
     .tile.selected { border: 3px solid #e74c3c; }
+    
+    /* Last move highlight animation */
+    .tile.last-move {
+      border: 3px solid #f39c12;
+      box-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes glow-pulse {
+      0%, 100% {
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(243, 156, 18, 0.8);
+      }
+    }
+    
     .board-cell {
       width: 60px;
       height: 60px;
@@ -212,763 +229,656 @@
         winner: 'Winner',
         yourTurn: 'Your turn!',
         turn: "'s turn",
-        clickToPlace: 'Click on the board to place your tile',
-        tilesSelectedSwap: 'tiles selected for swap',
-        clickTilePlace: 'Click a tile, then click where to place it',
-        yourHand: 'Your Hand:',
-        howToPlay: 'How to play:',
+        yourHand: 'Your Hand',
+        howToPlay: 'How to Play:',
         placeOne: 'Place one tile:',
-        placeOneDesc: 'Click a tile (green glow), then click on the board',
+        placeOneDesc: 'Click a tile in your hand, then click an empty spot on the board',
         placeMultiple: 'Place multiple tiles:',
-        placeMultipleDesc: 'Drag tiles from your hand to the board',
+        placeMultipleDesc: 'Click multiple tiles (they turn red), then click "Play" to place them all',
         swapTiles: 'Swap tiles:',
-        swapTilesDesc: 'Click 2+ tiles to select them (red border), then click "Swap"',
-        removeTile: 'Remove placed tile:',
-        removeTileDesc: 'Click on yellow tiles on the board',
+        swapTilesDesc: 'Select tiles (they turn red), then click "Swap"',
+        removeTile: 'Remove a placed tile:',
+        removeTileDesc: 'Click on a yellow tile to remove it from the board',
         playButton: 'Play',
-        tile: 'Tile',
         clearBoard: 'Clear Board',
         swap: 'Swap',
-        enterName: 'Please enter your name!',
-        enterNameAndId: 'Please enter your name and game ID!',
-        gameNotFound: 'Game not found! Check the Game ID and try again.',
-        gameStarted: 'Game already started!',
-        gameFull: 'Game is full!',
-        cannotSwap: 'Cannot swap - not enough tiles in bag',
+        tile: 'tile',
         pts: 'pts',
-        rules: 'Rules',
-        rulesTitle: 'Qwirkle Rules',
-        rulesClose: 'Close',
-        rulesObjective: 'Objective:',
-        rulesObjectiveText: 'Score the most points by creating lines of tiles that share a common attribute.',
-        rulesTiles: 'Tiles:',
-        rulesTilesText: '108 tiles with 6 shapes in 6 colors (3 of each combination).',
-        rulesPlacement: 'Placement Rules:',
-        rulesPlacement1: 'Tiles in a line must share either the same color OR the same shape (not both)',
-        rulesPlacement2: 'No duplicate tiles in a line (same color AND same shape)',
-        rulesPlacement3: 'Lines can have a maximum of 6 tiles',
-        rulesPlacement4: 'New tiles must connect to existing tiles on the board',
-        rulesScoring: 'Scoring:',
-        rulesScoring1: 'Score 1 point per tile in each line you complete or extend',
-        rulesScoring2: 'Complete a line of 6 tiles = QWIRKLE! = +6 bonus points (12 total)',
-        rulesScoring3: 'If a tile creates multiple lines, you score for all of them',
-        rulesTurns: 'Your Turn:',
-        rulesTurns1: 'Place 1 or more tiles from your hand, OR',
-        rulesTurns2: 'Swap any number of tiles (skip your turn)',
-        rulesEnd: 'End of Game:',
-        rulesEndText: 'Game ends when the bag is empty and one player plays their last tile. That player gets +6 bonus points. Highest score wins!',
-        errorNoTiles: 'No tiles placed',
-        errorSameRowCol: 'Tiles must be in same row or column',
-        errorContinuous: 'Tiles must be continuous',
-        errorMaxSix: 'Line cannot exceed 6 tiles',
-        errorShareAttribute: 'Line must share color or shape',
-        errorDuplicates: 'Duplicate tiles in line',
-        errorConnect: 'Must connect to existing tiles',
-        errorCreating: 'Error creating game',
-        errorJoining: 'Error joining game',
-        errorStarting: 'Error starting game',
-        errorPlaying: 'Error playing tiles',
-        errorSwapping: 'Error swapping tiles',
+        clickTilePlace: 'Click a tile to place it, or select multiple to swap',
+        clickToPlace: 'Click on the board to place your tile',
+        tilesSelectedSwap: 'tiles selected. Click "Swap" or select more tiles.',
         firebaseError: 'Firebase Failed to Load',
-        firebaseErrorDesc: 'The Firebase library couldn\'t load. This might be due to:',
+        firebaseErrorDesc: 'Could not connect to the game server. This might be due to:',
         poorConnection: 'Poor internet connection',
-        firewall: 'Firewall or ad-blocker blocking scripts',
-        browserSettings: 'Browser security settings',
-        tryRefresh: 'Try:',
-        refreshPage: 'Refreshing the page',
-        disableAdblock: 'Disabling ad-blockers',
-        differentBrowser: 'Using a different browser',
+        firewall: 'Firewall or network restrictions blocking Firebase',
+        browserSettings: 'Browser settings blocking scripts',
+        tryRefresh: 'Try these solutions:',
+        refreshPage: 'Refresh the page',
+        disableAdblock: 'Temporarily disable ad blockers',
+        differentBrowser: 'Try a different browser',
         firebaseInitError: 'Firebase Initialization Error',
-        refreshTryAgain: 'Please refresh the page and try again.',
-        playerNotFound: 'Player data not found. Please refresh the page.',
-        reconnecting: 'Reconnecting to your game...',
-        reconnectFailed: 'Could not reconnect to previous game.',
-        leaveGame: 'Leave Game'
+        refreshTryAgain: 'Please refresh the page to try again.',
+        language: 'Language'
       },
-      ru: {
-        title: 'Qwirkle Онлайн',
-        yourName: 'Ваше имя',
-        createGame: 'Создать новую игру',
-        or: 'ИЛИ',
-        gameId: 'ID игры',
-        joinGame: 'Присоединиться к игре',
-        gameLobby: 'Лобби игры',
-        shareId: 'Поделитесь этим ID с друзьями!',
-        players: 'Игроки',
-        waitingHost: 'Ожидание начала игры хостом...',
-        startGame: 'Начать игру',
-        bag: 'Мешок',
-        tiles: 'фишек',
-        gameOver: 'Игра окончена!',
-        winner: 'Победитель',
-        yourTurn: 'Ваш ход!',
-        turn: ' ходит',
-        clickToPlace: 'Нажмите на доску, чтобы поставить фишку',
-        tilesSelectedSwap: 'фишек выбрано для обмена',
-        clickTilePlace: 'Нажмите на фишку, затем куда её поставить',
-        yourHand: 'Ваши фишки:',
-        howToPlay: 'Как играть:',
-        placeOne: 'Поставить одну фишку:',
-        placeOneDesc: 'Нажмите на фишку (зелёное свечение), затем на доску',
-        placeMultiple: 'Поставить несколько фишек:',
-        placeMultipleDesc: 'Перетащите фишки из руки на доску',
-        swapTiles: 'Обменять фишки:',
-        swapTilesDesc: 'Нажмите на 2+ фишки (красная рамка), затем "Обменять"',
-        removeTile: 'Убрать поставленную фишку:',
-        removeTileDesc: 'Нажмите на жёлтую фишку на доске',
-        playButton: 'Сыграть',
-        tile: 'фишку',
-        clearBoard: 'Очистить доску',
-        swap: 'Обменять',
-        enterName: 'Пожалуйста, введите ваше имя!',
-        enterNameAndId: 'Пожалуйста, введите имя и ID игры!',
-        gameNotFound: 'Игра не найдена! Проверьте ID игры и попробуйте снова.',
-        gameStarted: 'Игра уже началась!',
-        gameFull: 'Игра заполнена!',
-        cannotSwap: 'Нельзя обменять - недостаточно фишек в мешке',
-        pts: 'очк.',
-        rules: 'Правила',
-        rulesTitle: 'Правила Qwirkle',
-        rulesClose: 'Закрыть',
-        rulesObjective: 'Цель:',
-        rulesObjectiveText: 'Набрать максимум очков, создавая линии фишек с общими признаками.',
-        rulesTiles: 'Фишки:',
-        rulesTilesText: '108 фишек с 6 формами в 6 цветах (по 3 каждой комбинации).',
-        rulesPlacement: 'Правила размещения:',
-        rulesPlacement1: 'Фишки в линии должны иметь одинаковый цвет ИЛИ одинаковую форму (не оба)',
-        rulesPlacement2: 'Нет дубликатов в линии (одинаковый цвет И форма)',
-        rulesPlacement3: 'Линии могут иметь максимум 6 фишек',
-        rulesPlacement4: 'Новые фишки должны соединяться с существующими на доске',
-        rulesScoring: 'Подсчёт очков:',
-        rulesScoring1: '1 очко за каждую фишку в линии, которую вы создали или дополнили',
-        rulesScoring2: 'Линия из 6 фишек = QWIRKLE! = +6 бонусных очков (12 всего)',
-        rulesScoring3: 'Если фишка создаёт несколько линий, вы получаете очки за все',
-        rulesTurns: 'Ваш ход:',
-        rulesTurns1: 'Поставьте 1 или больше фишек из руки, ИЛИ',
-        rulesTurns2: 'Обменяйте любое количество фишек (пропускаете ход)',
-        rulesEnd: 'Конец игры:',
-        rulesEndText: 'Игра заканчивается, когда мешок пуст и игрок выставил последнюю фишку. Этот игрок получает +6 бонусных очков. Побеждает игрок с наибольшим счётом!',
-        errorNoTiles: 'Фишки не выставлены',
-        errorSameRowCol: 'Фишки должны быть в одном ряду или столбце',
-        errorContinuous: 'Фишки должны быть непрерывными',
-        errorMaxSix: 'Линия не может превышать 6 фишек',
-        errorShareAttribute: 'Линия должна иметь общий цвет или форму',
-        errorDuplicates: 'Дубликаты фишек в линии',
-        errorConnect: 'Должны соединяться с существующими фишками',
-        errorCreating: 'Ошибка создания игры',
-        errorJoining: 'Ошибка присоединения к игре',
-        errorStarting: 'Ошибка запуска игры',
-        errorPlaying: 'Ошибка выставления фишек',
-        errorSwapping: 'Ошибка обмена фишек',
-        firebaseError: 'Ошибка загрузки Firebase',
-        firebaseErrorDesc: 'Библиотека Firebase не загрузилась. Это может быть из-за:',
-        poorConnection: 'Плохого интернет-соединения',
-        firewall: 'Блокировки скриптов файрволом или блокировщиком рекламы',
-        browserSettings: 'Настроек безопасности браузера',
-        tryRefresh: 'Попробуйте:',
-        refreshPage: 'Обновить страницу',
-        disableAdblock: 'Отключить блокировщики рекламы',
-        differentBrowser: 'Использовать другой браузер',
-        firebaseInitError: 'Ошибка инициализации Firebase',
-        refreshTryAgain: 'Пожалуйста, обновите страницу и попробуйте снова.',
-        playerNotFound: 'Данные игрока не найдены. Пожалуйста, обновите страницу.',
-        reconnecting: 'Переподключение к вашей игре...',
-        reconnectFailed: 'Не удалось переподключиться к предыдущей игре.',
-        leaveGame: 'Выйти из игры'
+      pl: {
+        title: 'Qwirkle Online',
+        yourName: 'Twoje imię',
+        createGame: 'Utwórz nową grę',
+        or: 'LUB',
+        gameId: 'ID Gry',
+        joinGame: 'Dołącz do gry',
+        gameLobby: 'Poczekalnia',
+        shareId: 'Udostępnij to ID znajomym!',
+        players: 'Gracze',
+        waitingHost: 'Czekam aż gospodarz rozpocznie grę...',
+        startGame: 'Rozpocznij grę',
+        bag: 'Woreczek',
+        tiles: 'kafelków',
+        gameOver: 'Koniec gry!',
+        winner: 'Zwycięzca',
+        yourTurn: 'Twoja kolej!',
+        turn: ' - kolej',
+        yourHand: 'Twoje kafelki',
+        howToPlay: 'Jak grać:',
+        placeOne: 'Położ jeden kafelek:',
+        placeOneDesc: 'Kliknij kafelek w ręce, następnie kliknij puste miejsce na planszy',
+        placeMultiple: 'Położ wiele kafelków:',
+        placeMultipleDesc: 'Kliknij wiele kafelków (staną się czerwone), następnie kliknij "Zagraj"',
+        swapTiles: 'Wymień kafelki:',
+        swapTilesDesc: 'Wybierz kafelki (staną się czerwone), następnie kliknij "Wymień"',
+        removeTile: 'Usuń położony kafelek:',
+        removeTileDesc: 'Kliknij na żółty kafelek aby go usunąć z planszy',
+        playButton: 'Zagraj',
+        clearBoard: 'Wyczyść planszę',
+        swap: 'Wymień',
+        tile: 'kafelek',
+        pts: 'pkt',
+        clickTilePlace: 'Kliknij kafelek aby go położyć, lub wybierz wiele do wymiany',
+        clickToPlace: 'Kliknij na planszę aby położyć kafelek',
+        tilesSelectedSwap: 'kafelków zaznaczonych. Kliknij "Wymień" lub zaznacz więcej.',
+        firebaseError: 'Nie udało się załadować Firebase',
+        firebaseErrorDesc: 'Nie można połączyć się z serwerem gry. Może to być spowodowane:',
+        poorConnection: 'Słabym połączeniem internetowym',
+        firewall: 'Firewallem lub ograniczeniami sieciowymi blokującymi Firebase',
+        browserSettings: 'Ustawieniami przeglądarki blokującymi skrypty',
+        tryRefresh: 'Spróbuj tych rozwiązań:',
+        refreshPage: 'Odśwież stronę',
+        disableAdblock: 'Tymczasowo wyłącz blokady reklam',
+        differentBrowser: 'Spróbuj innej przeglądarki',
+        firebaseInitError: 'Błąd inicjalizacji Firebase',
+        refreshTryAgain: 'Odśwież stronę aby spróbować ponownie.',
+        language: 'Język'
       }
     };
 
     function t(key) {
-      return translations[state.language][key] || key;
+      return translations[state.language][key] || translations.en[key] || key;
     }
 
-    function toggleLanguage() {
-      state.language = state.language === 'en' ? 'ru' : 'en';
-      localStorage.setItem('qwirkleLanguage', state.language);
+    function setLanguage(lang) {
+      state.language = lang;
+      localStorage.setItem('qwirkleLanguage', lang);
       render();
     }
 
-    function showRules() {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;';
-      
-      overlay.innerHTML = `
-        <div style="background: white; border-radius: 10px; padding: 30px; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-          <h2 style="margin-bottom: 20px; color: #2c3e50;">${t('rulesTitle')}</h2>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesObjective')}</h3>
-          <p>${t('rulesObjectiveText')}</p>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesTiles')}</h3>
-          <p>${t('rulesTilesText')}</p>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesPlacement')}</h3>
-          <ul style="margin-left: 20px;">
-            <li>${t('rulesPlacement1')}</li>
-            <li>${t('rulesPlacement2')}</li>
-            <li>${t('rulesPlacement3')}</li>
-            <li>${t('rulesPlacement4')}</li>
-          </ul>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesScoring')}</h3>
-          <ul style="margin-left: 20px;">
-            <li>${t('rulesScoring1')}</li>
-            <li>${t('rulesScoring2')}</li>
-            <li>${t('rulesScoring3')}</li>
-          </ul>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesTurns')}</h3>
-          <ul style="margin-left: 20px;">
-            <li>${t('rulesTurns1')}</li>
-            <li>${t('rulesTurns2')}</li>
-          </ul>
-          
-          <h3 style="color: #27ae60; margin-top: 15px;">${t('rulesEnd')}</h3>
-          <p>${t('rulesEndText')}</p>
-          
-          <button class="btn-blue" id="closeRules" style="margin-top: 20px;">${t('rulesClose')}</button>
-        </div>
-      `;
-      
-      document.body.appendChild(overlay);
-      document.getElementById('closeRules').onclick = () => overlay.remove();
-      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    function generateGameId() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 
-    function debugCrossTiles() {
-      let report = 'CLOVER TILES DEBUG:\n\n';
-      
-      // Check board
-      if (state.gameState && state.gameState.board) {
-        let cloverCount = 0;
-        Object.entries(state.gameState.board).forEach(([pos, tile]) => {
-          if (tile.shape === 'clover') {
-            cloverCount++;
-            const expectedColor = COLOR_MAP[tile.color];
-            report += `Board ${pos}:\n  Color: ${tile.color}\n  Expected: ${expectedColor}\n\n`;
-          }
-        });
-        report += `Total clovers on board: ${cloverCount}\n\n`;
-      }
-      
-      // Check hand
-      if (state.gameState && state.gameState.players && state.gameState.players[state.playerId]) {
-        const hand = state.gameState.players[state.playerId].hand;
-        let handCloverCount = 0;
-        hand.forEach(tile => {
-          if (tile.shape === 'clover') {
-            handCloverCount++;
-            const expectedColor = COLOR_MAP[tile.color];
-            report += `Hand tile:\n  Color: ${tile.color}\n  Expected: ${expectedColor}\n\n`;
-          }
-        });
-        report += `Total clovers in hand: ${handCloverCount}\n\n`;
-        
-        // Now check the actual rendered tiles
-        report += '--- CHECKING ACTUAL RENDERED COLORS ---\n\n';
-        const handDiv = document.getElementById('hand');
-        if (handDiv) {
-          const tiles = handDiv.querySelectorAll('.tile');
-          tiles.forEach((tileEl, idx) => {
-            const content = tileEl.textContent;
-            if (content === '♣') {
-              const computedColor = window.getComputedStyle(tileEl).color;
-              const inlineColor = tileEl.style.color;
-              report += `Rendered clover #${idx}:\n  Inline style: ${inlineColor}\n  Computed color: ${computedColor}\n\n`;
-            }
-          });
-        }
-      }
-      
-      alert(report);
+    function generatePlayerId() {
+      return 'p_' + Math.random().toString(36).substring(2, 15);
     }
-
-    window.debugCrossTiles = debugCrossTiles;
 
     function createDeck() {
       const deck = [];
+      let id = 0;
       SHAPES.forEach(shape => {
         COLORS.forEach(color => {
           for (let i = 0; i < 3; i++) {
-            deck.push({ shape, color, id: `${shape}-${color}-${i}` });
+            deck.push({ id: id++, shape, color });
           }
         });
       });
-      return deck.sort(() => Math.random() - 0.5);
+      return shuffle(deck);
     }
 
-    function renderTile(tile, options = {}) {
-      const div = document.createElement('div');
-      div.className = 'tile' + (options.selected ? ' selected' : '');
-      div.draggable = options.draggable || false;
-      
-      // Force color with !important by using setAttribute
-      const color = COLOR_MAP[tile.color];
-      div.style.setProperty('color', color, 'important');
-      div.style.setProperty('-webkit-text-fill-color', color, 'important'); // For WebKit browsers
-      
-      div.textContent = SHAPE_ICONS[tile.shape];
-      if (options.onClick) div.onclick = options.onClick;
-      if (options.onDragStart) div.ondragstart = options.onDragStart;
-      return div;
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
     }
 
     async function createGame() {
-      if (!state.playerName.trim()) {
-        alert(t('enterName'));
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) {
+        alert('Please enter your name');
         return;
       }
+
+      const gameId = generateGameId();
+      const playerId = state.playerId || generatePlayerId();
       
-      try {
-        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
-        state.playerId = newPlayerId;
-        localStorage.setItem('qwirklePlayerId', newPlayerId);
+      const deck = createDeck();
+      const initialHand = deck.splice(0, 6);
 
-        const deck = createDeck();
-        const player1Hand = deck.splice(0, 6);
-        
-        const newGameRef = db.ref('games').push();
-        const newGameId = newGameRef.key;
-        
-        await newGameRef.set({
-          players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
-          deck: deck,
-          board: {},
-          currentPlayerIndex: 0,
-          playerOrder: [newPlayerId],
-          status: 'waiting',
-          createdAt: Date.now()
-        });
+      await db.ref(`games/${gameId}`).set({
+        status: 'lobby',
+        host: playerId,
+        deck: deck,
+        board: {},
+        players: {
+          [playerId]: {
+            name: name,
+            hand: initialHand,
+            score: 0
+          }
+        },
+        playerOrder: [playerId],
+        currentPlayerIndex: 0,
+        lastMove: null,
+        createdAt: Date.now()
+      });
 
-        state.gameId = newGameId;
-        state.screen = 'lobby';
-        render();
-        listenToGame();
-      } catch (error) {
-        console.error('Error creating game:', error);
-        alert(t('errorCreating') + ': ' + error.message);
-      }
+      state.playerId = playerId;
+      state.playerName = name;
+      state.gameId = gameId;
+      localStorage.setItem('qwirklePlayerId', playerId);
+      
+      state.screen = 'lobby';
+      render();
+      listenToGame(gameId);
     }
 
     async function joinGame() {
-      if (!state.playerName.trim() || !state.gameId.trim()) {
-        alert(t('enterNameAndId'));
+      const gameId = document.getElementById('gameIdInput').value.trim().toUpperCase();
+      const name = document.getElementById('nameInput').value.trim();
+      
+      if (!gameId || !name) {
+        alert('Please enter both game ID and your name');
         return;
       }
-      
-      try {
-        const newPlayerId = `player_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
-        state.playerId = newPlayerId;
-        localStorage.setItem('qwirklePlayerId', newPlayerId);
 
-        const snapshot = await db.ref(`games/${state.gameId}`).once('value');
-        const game = snapshot.val();
-        
-        if (!game) { 
-          alert(t('gameNotFound')); 
-          return; 
-        }
-        if (game.status !== 'waiting') { 
-          alert(t('gameStarted')); 
-          return; 
-        }
-        if (Object.keys(game.players).length >= 4) { 
-          alert(t('gameFull')); 
-          return; 
-        }
-
-        const deck = [...game.deck];
-        const hand = deck.splice(0, 6);
-        const playerCount = Object.keys(game.players).length;
-        
-        await db.ref(`games/${state.gameId}`).update({
-          [`players/${newPlayerId}`]: { name: state.playerName, hand, score: 0, order: playerCount },
-          deck,
-          playerOrder: [...game.playerOrder, newPlayerId]
-        });
-
-        state.screen = 'lobby';
-        render();
-        listenToGame();
-      } catch (error) {
-        console.error('Error joining game:', error);
-        alert(t('errorJoining') + ': ' + error.message);
+      const gameSnapshot = await db.ref(`games/${gameId}`).once('value');
+      if (!gameSnapshot.exists()) {
+        alert('Game not found!');
+        return;
       }
-    }
 
-    function listenToGame() {
-      db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          state.gameState = data;
-          
-          if (data.status === 'playing' && state.screen !== 'game') {
-            state.screen = 'game';
-          }
-          
-          render();
-        }
+      const game = gameSnapshot.val();
+      if (game.status !== 'lobby') {
+        alert('This game has already started!');
+        return;
+      }
+
+      const playerId = state.playerId || generatePlayerId();
+      
+      const deck = game.deck;
+      const hand = deck.splice(0, 6);
+
+      await db.ref(`games/${gameId}/players/${playerId}`).set({
+        name: name,
+        hand: hand,
+        score: 0
       });
+
+      await db.ref(`games/${gameId}/deck`).set(deck);
+      await db.ref(`games/${gameId}/playerOrder`).set([...game.playerOrder, playerId]);
+
+      state.playerId = playerId;
+      state.playerName = name;
+      state.gameId = gameId;
+      localStorage.setItem('qwirklePlayerId', playerId);
+      
+      state.screen = 'lobby';
+      render();
+      listenToGame(gameId);
     }
 
     async function startGame() {
-      try {
-        await db.ref(`games/${state.gameId}`).update({ status: 'playing' });
-        state.screen = 'game';
-      } catch (error) {
-        alert(t('errorStarting') + ': ' + error.message);
-      }
+      await db.ref(`games/${state.gameId}/status`).set('playing');
     }
 
-    function validatePlacement(placements, board) {
-      if (placements.length === 0) return { valid: false, reason: t('errorNoTiles') };
-
-      // Ensure board is an object, even if it's undefined/null
-      board = board || {};
-      
-      const newBoard = { ...board };
-      placements.forEach(p => { newBoard[`${p.row},${p.col}`] = p.tile; });
-
-      const rows = placements.map(p => p.row);
-      const cols = placements.map(p => p.col);
-      const sameRow = rows.every(r => r === rows[0]);
-      const sameCol = cols.every(c => c === cols[0]);
-
-      if (!sameRow && !sameCol) return { valid: false, reason: t('errorSameRowCol') };
-
-      if (sameRow) {
-        const sortedCols = [...cols].sort((a, b) => a - b);
-        for (let i = 0; i < sortedCols.length - 1; i++) {
-          for (let c = sortedCols[i] + 1; c < sortedCols[i + 1]; c++) {
-            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: t('errorContinuous') };
-          }
+    function listenToGame(gameId) {
+      db.ref(`games/${gameId}`).on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+          alert('Game no longer exists');
+          state.screen = 'menu';
+          render();
+          return;
         }
-      } else {
-        const sortedRows = [...rows].sort((a, b) => a - b);
-        for (let i = 0; i < sortedRows.length - 1; i++) {
-          for (let r = sortedRows[i] + 1; r < sortedRows[i + 1]; r++) {
-            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: t('errorContinuous') };
+
+        const game = snapshot.val();
+        state.gameState = game;
+
+        if (game.status === 'lobby') {
+          state.screen = 'lobby';
+        } else if (game.status === 'playing' || game.status === 'finished') {
+          state.screen = 'game';
+        }
+
+        render();
+      });
+    }
+
+    function isValidPlacement(placements, board) {
+      if (placements.length === 0) return { valid: false, error: 'No tiles placed' };
+
+      // Check all tiles are in same row OR same column
+      const rows = [...new Set(placements.map(p => p.row))];
+      const cols = [...new Set(placements.map(p => p.col))];
+      
+      if (rows.length > 1 && cols.length > 1) {
+        return { valid: false, error: 'Tiles must be in a single row or column' };
+      }
+
+      // Check tiles are contiguous
+      if (placements.length > 1) {
+        const sorted = rows.length === 1 
+          ? [...placements].sort((a, b) => a.col - b.col)
+          : [...placements].sort((a, b) => a.row - b.row);
+        
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const current = sorted[i];
+          const next = sorted[i + 1];
+          const gap = rows.length === 1 
+            ? next.col - current.col 
+            : next.row - current.row;
+          
+          if (gap !== 1) {
+            // Check if there's a tile filling the gap
+            let hasGap = false;
+            for (let j = 1; j < gap; j++) {
+              const checkPos = rows.length === 1
+                ? `${current.row},${current.col + j}`
+                : `${current.row + j},${current.col}`;
+              if (!board[checkPos]) {
+                hasGap = true;
+                break;
+              }
+            }
+            if (hasGap) {
+              return { valid: false, error: 'Tiles must be contiguous' };
+            }
           }
         }
       }
 
-      const linesToCheck = new Set();
+      // Check each tile connects to existing tiles (unless first move)
+      const boardHasTiles = Object.keys(board).length > 0;
+      if (boardHasTiles) {
+        let hasConnection = false;
+        for (const p of placements) {
+          const neighbors = [
+            board[`${p.row-1},${p.col}`],
+            board[`${p.row+1},${p.col}`],
+            board[`${p.row},${p.col-1}`],
+            board[`${p.row},${p.col+1}`]
+          ];
+          if (neighbors.some(n => n)) {
+            hasConnection = true;
+            break;
+          }
+        }
+        if (!hasConnection) {
+          return { valid: false, error: 'Tiles must connect to existing tiles' };
+        }
+      }
+
+      // Build complete lines including existing tiles
+      const tempBoard = { ...board };
       placements.forEach(p => {
-        linesToCheck.add(`row-${p.row}`);
-        linesToCheck.add(`col-${p.col}`);
+        tempBoard[`${p.row},${p.col}`] = p.tile;
       });
 
-      for (const line of linesToCheck) {
-        const [type, pos] = line.split('-');
-        const position = parseInt(pos);
-        const tiles = [];
-        
-        if (type === 'row') {
-          for (let c = -50; c <= 50; c++) {
-            const tile = newBoard[`${position},${c}`];
-            if (tile) tiles.push(tile);
-            else if (tiles.length > 0) break;
-          }
-        } else {
-          for (let r = -50; r <= 50; r++) {
-            const tile = newBoard[`${r},${position}`];
-            if (tile) tiles.push(tile);
-            else if (tiles.length > 0) break;
-          }
-        }
-
-        if (tiles.length > 6) return { valid: false, reason: t('errorMaxSix') };
-
-        if (tiles.length > 1) {
-          const colors = tiles.map(t => t.color);
-          const shapes = tiles.map(t => t.shape);
-          const uniqueColors = new Set(colors);
-          const uniqueShapes = new Set(shapes);
-
-          const allSameColor = uniqueColors.size === 1;
-          const allSameShape = uniqueShapes.size === 1;
-
-          if (!allSameColor && !allSameShape) return { valid: false, reason: t('errorShareAttribute') };
-          if (allSameColor && uniqueShapes.size !== tiles.length) return { valid: false, reason: t('errorDuplicates') };
-          if (allSameShape && uniqueColors.size !== tiles.length) return { valid: false, reason: t('errorDuplicates') };
-        }
-      }
-
-      if (Object.keys(board).length === 0) return { valid: true, score: calculateScore(placements, newBoard) };
-
-      let connected = false;
+      // Check lines for validity
+      const checkedLines = new Set();
+      
       for (const p of placements) {
-        const adjacent = [
-          newBoard[`${p.row - 1},${p.col}`],
-          newBoard[`${p.row + 1},${p.col}`],
-          newBoard[`${p.row},${p.col - 1}`],
-          newBoard[`${p.row},${p.col + 1}`]
-        ];
-        if (adjacent.some(t => t && !placements.find(pl => pl.tile.id === t.id))) {
-          connected = true;
-          break;
+        // Check horizontal line
+        const rowKey = `row-${p.row}`;
+        if (!checkedLines.has(rowKey)) {
+          checkedLines.add(rowKey);
+          const rowTiles = [];
+          let col = p.col;
+          
+          // Find start of line
+          while (tempBoard[`${p.row},${col-1}`]) col--;
+          
+          // Collect line
+          while (tempBoard[`${p.row},${col}`]) {
+            rowTiles.push(tempBoard[`${p.row},${col}`]);
+            col++;
+          }
+          
+          if (rowTiles.length > 1) {
+            const lineCheck = checkLine(rowTiles);
+            if (!lineCheck.valid) return lineCheck;
+          }
+        }
+
+        // Check vertical line
+        const colKey = `col-${p.col}`;
+        if (!checkedLines.has(colKey)) {
+          checkedLines.add(colKey);
+          const colTiles = [];
+          let row = p.row;
+          
+          // Find start of line
+          while (tempBoard[`${row-1},${p.col}`]) row--;
+          
+          // Collect line
+          while (tempBoard[`${row},${p.col}`]) {
+            colTiles.push(tempBoard[`${row},${p.col}`]);
+            row++;
+          }
+          
+          if (colTiles.length > 1) {
+            const lineCheck = checkLine(colTiles);
+            if (!lineCheck.valid) return lineCheck;
+          }
         }
       }
 
-      if (!connected) return { valid: false, reason: t('errorConnect') };
-      return { valid: true, score: calculateScore(placements, newBoard) };
+      return { valid: true };
+    }
+
+    function checkLine(tiles) {
+      if (tiles.length > 6) {
+        return { valid: false, error: 'Line cannot be longer than 6' };
+      }
+
+      const colors = tiles.map(t => t.color);
+      const shapes = tiles.map(t => t.shape);
+      
+      const uniqueColors = new Set(colors);
+      const uniqueShapes = new Set(shapes);
+      
+      // All same shape, different colors
+      if (uniqueShapes.size === 1 && uniqueColors.size === tiles.length) {
+        return { valid: true };
+      }
+      
+      // All same color, different shapes
+      if (uniqueColors.size === 1 && uniqueShapes.size === tiles.length) {
+        return { valid: true };
+      }
+      
+      return { valid: false, error: 'Line must be all same shape (different colors) or all same color (different shapes)' };
     }
 
     function calculateScore(placements, board) {
-      // Ensure board is an object
-      board = board || {};
-      
+      const tempBoard = { ...board };
+      placements.forEach(p => {
+        tempBoard[`${p.row},${p.col}`] = p.tile;
+      });
+
       let totalScore = 0;
       const scoredLines = new Set();
 
-      placements.forEach(p => {
+      for (const p of placements) {
+        // Score horizontal line
         const rowKey = `row-${p.row}`;
         if (!scoredLines.has(rowKey)) {
-          let rowTiles = [];
-          for (let c = -50; c <= 50; c++) {
-            const tile = board[`${p.row},${c}`];
-            if (tile) rowTiles.push(tile);
-            else if (rowTiles.length > 0) break;
+          const rowTiles = [];
+          let col = p.col;
+          while (tempBoard[`${p.row},${col-1}`]) col--;
+          while (tempBoard[`${p.row},${col}`]) {
+            rowTiles.push(tempBoard[`${p.row},${col}`]);
+            col++;
           }
           if (rowTiles.length > 1) {
-            let score = rowTiles.length;
-            if (rowTiles.length === 6) score += 6;
-            totalScore += score;
             scoredLines.add(rowKey);
+            totalScore += rowTiles.length;
+            if (rowTiles.length === 6) totalScore += 6; // Qwirkle bonus
           }
         }
 
+        // Score vertical line
         const colKey = `col-${p.col}`;
         if (!scoredLines.has(colKey)) {
-          let colTiles = [];
-          for (let r = -50; r <= 50; r++) {
-            const tile = board[`${r},${p.col}`];
-            if (tile) colTiles.push(tile);
-            else if (colTiles.length > 0) break;
+          const colTiles = [];
+          let row = p.row;
+          while (tempBoard[`${row-1},${p.col}`]) row--;
+          while (tempBoard[`${row},${p.col}`]) {
+            colTiles.push(tempBoard[`${row},${p.col}`]);
+            row++;
           }
           if (colTiles.length > 1) {
-            let score = colTiles.length;
-            if (colTiles.length === 6) score += 6;
-            totalScore += score;
             scoredLines.add(colKey);
+            totalScore += colTiles.length;
+            if (colTiles.length === 6) totalScore += 6; // Qwirkle bonus
           }
         }
-      });
+      }
 
-      if (totalScore === 0 && placements.length > 0) totalScore = placements.length;
+      // If no lines scored (single tile), score 1 point
+      if (totalScore === 0) totalScore = 1;
+
       return totalScore;
     }
 
     async function playTiles() {
       if (state.pendingPlacements.length === 0) return;
 
-      try {
-        const currentBoard = state.gameState.board || {};
-        
-        const validation = validatePlacement(state.pendingPlacements, currentBoard);
-        
-        if (!validation.valid) { 
-          alert(validation.reason); 
-          return; 
-        }
-
-        const newBoard = { ...currentBoard };
-        state.pendingPlacements.forEach(p => { 
-          const tileToStore = {
-            shape: p.tile.shape,
-            color: p.tile.color,
-            id: p.tile.id
-          };
-          newBoard[`${p.row},${p.col}`] = tileToStore;
-        });
-
-        const currentPlayer = state.gameState.players[state.playerId];
-        const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
-
-        let newDeck = [...state.gameState.deck];
-        const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
-        const drawnTiles = newDeck.splice(0, tilesToDraw);
-        newHand.push(...drawnTiles);
-
-        const newScore = currentPlayer.score + validation.score;
-        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
-
-        const updates = {
-          board: newBoard,
-          deck: newDeck,
-          [`players/${state.playerId}/hand`]: newHand,
-          [`players/${state.playerId}/score`]: newScore,
-          currentPlayerIndex: nextPlayerIndex
-        };
-
-        if (newDeck.length === 0 && newHand.length === 0) {
-          updates[`players/${state.playerId}/score`] = newScore + 6;
-          updates.status = 'finished';
-        }
-
-        await db.ref(`games/${state.gameId}`).update(updates);
-        
-        state.pendingPlacements = [];
-        state.selectedTiles = [];
-        state.tileToPlace = null;
-        render();
-      } catch (error) {
-        console.error('Error in playTiles:', error);
-        alert(t('errorPlaying') + ': ' + error.message);
+      const validation = isValidPlacement(state.pendingPlacements, state.gameState.board);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
       }
+
+      const score = calculateScore(state.pendingPlacements, state.gameState.board);
+      const newBoard = { ...state.gameState.board };
+      const placedTileIds = [];
+      
+      state.pendingPlacements.forEach(p => {
+        newBoard[`${p.row},${p.col}`] = p.tile;
+        placedTileIds.push(`${p.row},${p.col}`);
+      });
+
+      const currentPlayer = state.gameState.players[state.playerId];
+      const newHand = currentPlayer.hand.filter(t => 
+        !state.pendingPlacements.find(p => p.tile.id === t.id)
+      );
+
+      // Draw new tiles
+      const deck = state.gameState.deck;
+      const tilesToDraw = Math.min(state.pendingPlacements.length, deck.length);
+      const drawnTiles = deck.splice(0, tilesToDraw);
+      newHand.push(...drawnTiles);
+
+      const newScore = currentPlayer.score + score;
+      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+
+      // Check if game is over
+      let gameStatus = 'playing';
+      if (deck.length === 0 && newHand.length === 0) {
+        gameStatus = 'finished';
+      }
+
+      // Store last move information
+      const lastMove = {
+        playerId: state.playerId,
+        tiles: placedTileIds,
+        timestamp: Date.now()
+      };
+
+      await db.ref(`games/${state.gameId}`).update({
+        board: newBoard,
+        deck: deck,
+        currentPlayerIndex: nextPlayerIndex,
+        status: gameStatus,
+        lastMove: lastMove,
+        [`players/${state.playerId}/hand`]: newHand,
+        [`players/${state.playerId}/score`]: newScore
+      });
+
+      state.pendingPlacements = [];
+      state.tileToPlace = null;
+      render();
     }
 
     async function swapTiles() {
-      if (state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length) {
-        alert(t('cannotSwap'));
+      if (state.selectedTiles.length === 0) return;
+      if (state.gameState.deck.length < state.selectedTiles.length) {
+        alert('Not enough tiles in the bag to swap!');
         return;
       }
 
-      try {
-        const currentPlayer = state.gameState.players[state.playerId];
-        const newHand = currentPlayer.hand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
+      const currentPlayer = state.gameState.players[state.playerId];
+      const newHand = currentPlayer.hand.filter(t => 
+        !state.selectedTiles.find(s => s.id === t.id)
+      );
 
-        let newDeck = [...state.gameState.deck];
-        const drawn = newDeck.splice(0, state.selectedTiles.length);
-        newHand.push(...drawn);
-        newDeck.push(...state.selectedTiles);
-        newDeck.sort(() => Math.random() - 0.5);
+      const deck = state.gameState.deck;
+      const drawnTiles = deck.splice(0, state.selectedTiles.length);
+      newHand.push(...drawnTiles);
+      deck.push(...state.selectedTiles);
 
-        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+      const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
 
-        await db.ref(`games/${state.gameId}`).update({
-          deck: newDeck,
-          [`players/${state.playerId}/hand`]: newHand,
-          currentPlayerIndex: nextPlayerIndex
-        });
+      // Clear last move when swapping (so highlight disappears)
+      await db.ref(`games/${state.gameId}`).update({
+        deck: shuffle(deck),
+        currentPlayerIndex: nextPlayerIndex,
+        lastMove: null,
+        [`players/${state.playerId}/hand`]: newHand
+      });
 
-        state.selectedTiles = [];
-        state.tileToPlace = null;
-        render();
-      } catch (error) {
-        console.error('Error swapping tiles:', error);
-        alert(t('errorSwapping') + ': ' + error.message);
+      state.selectedTiles = [];
+      render();
+    }
+
+    function renderTile(tile, options = {}) {
+      const el = document.createElement('div');
+      el.className = 'tile';
+      if (options.selected) el.classList.add('selected');
+      if (options.lastMove) el.classList.add('last-move');
+      el.style.color = COLOR_MAP[tile.color];
+      el.textContent = SHAPE_ICONS[tile.shape];
+      el.draggable = options.draggable || false;
+      
+      if (options.onDragStart) {
+        el.ondragstart = (e) => {
+          options.onDragStart();
+        };
       }
+      
+      if (options.onClick) {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          options.onClick();
+        };
+        el.style.cursor = 'pointer';
+      }
+      
+      return el;
     }
 
     function render() {
+      console.log('Rendering screen:', state.screen);
       const app = document.getElementById('app');
-      app.innerHTML = '';
-
-      if (state.reconnecting) {
-        app.innerHTML = `
-          <div style="text-align: center; padding: 40px;">
-            <h1>${t('reconnecting')}</h1>
-            <p style="color: #7f8c8d; margin-top: 20px;">Game ID: ${state.gameId}</p>
-          </div>
-        `;
-        return;
-      }
-
+      
       if (state.screen === 'menu') {
         app.innerHTML = `
+          <h1>${t('title')}</h1>
           <div style="text-align: right; margin-bottom: 20px;">
-            <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer;">
-              ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
-            </button>
+            <label>${t('language')}: </label>
+            <select id="langSelect" style="width: auto; padding: 8px;">
+              <option value="en" ${state.language === 'en' ? 'selected' : ''}>English</option>
+              <option value="pl" ${state.language === 'pl' ? 'selected' : ''}>Polski</option>
+            </select>
           </div>
-          <h1 style="text-align: center;">${t('title')}</h1>
-          <div style="max-width: 500px; margin: 0 auto;">
-            <input type="text" id="playerName" placeholder="${t('yourName')}" value="${state.playerName}">
-            <button class="btn-green" id="createBtn">${t('createGame')}</button>
-            <div style="margin: 20px 0; text-align: center; color: #7f8c8d;">${t('or')}</div>
-            <input type="text" id="gameIdInput" placeholder="${t('gameId')}" value="${state.gameId}">
-            <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
-            <button class="btn-gray" id="rulesBtn" style="margin-top: 20px;">${t('rules')}</button>
-          </div>
+          <input type="text" id="nameInput" placeholder="${t('yourName')}" value="${state.playerName}">
+          <button class="btn-green" id="createBtn">${t('createGame')}</button>
+          <div style="text-align: center; margin: 20px 0; color: #7f8c8d;">${t('or')}</div>
+          <input type="text" id="gameIdInput" placeholder="${t('gameId')}" style="text-transform: uppercase;">
+          <button class="btn-blue" id="joinBtn">${t('joinGame')}</button>
         `;
+
+        document.getElementById('langSelect').onchange = (e) => {
+          setLanguage(e.target.value);
+        };
+        document.getElementById('createBtn').onclick = createGame;
+        document.getElementById('joinBtn').onclick = joinGame;
         
-        const nameInput = document.getElementById('playerName');
-        const gameInput = document.getElementById('gameIdInput');
-        const createBtn = document.getElementById('createBtn');
-        const joinBtn = document.getElementById('joinBtn');
-        const rulesBtn = document.getElementById('rulesBtn');
-        
-        window.toggleLanguage = toggleLanguage;
-        
-        nameInput.oninput = (e) => state.playerName = e.target.value;
-        gameInput.oninput = (e) => state.gameId = e.target.value;
-        createBtn.onclick = createGame;
-        joinBtn.onclick = joinGame;
-        rulesBtn.onclick = showRules;
+        // Auto-focus name input
+        setTimeout(() => document.getElementById('nameInput')?.focus(), 100);
       }
-
-      else if (state.screen === 'lobby' && state.gameState) {
-        const isHost = state.gameState.playerOrder[0] === state.playerId;
-        const playerCount = Object.keys(state.gameState.players).length;
-
+      else if (state.screen === 'lobby') {
+        const isHost = state.gameState.host === state.playerId;
         app.innerHTML = `
-          <h1 style="text-align: center;">${t('gameLobby')}</h1>
+          <h1>${t('gameLobby')}</h1>
           <div class="game-id">
-            <strong>${t('gameId')}:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
-            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">${t('shareId')}</p>
+            <strong>${t('gameId')}:</strong> ${state.gameId}<br>
+            <small>${t('shareId')}</small>
           </div>
-          <h3>${t('players')} (${playerCount}/4):</h3>
-          <div id="playerList"></div>
-          ${isHost && playerCount >= 2 ? `<button class="btn-green" id="startBtn">${t('startGame')}</button>` : ''}
-          ${!isHost ? `<p style="text-align: center; color: #7f8c8d; margin-top: 20px;">${t('waitingHost')}</p>` : ''}
-          <button class="btn-red" id="leaveBtn" style="margin-top: 10px;">${t('leaveGame')}</button>
+          <h2>${t('players')}:</h2>
+          <div id="playersList"></div>
+          ${!isHost ? `<p style="margin-top: 20px; color: #7f8c8d;">${t('waitingHost')}</p>` : ''}
+          ${isHost ? `<button class="btn-green" id="startBtn" ${Object.keys(state.gameState.players).length < 2 ? 'disabled' : ''}>${t('startGame')}</button>` : ''}
         `;
 
-        const playerList = document.getElementById('playerList');
-        Object.entries(state.gameState.players).forEach(([id, player]) => {
+        const playersList = document.getElementById('playersList');
+        Object.entries(state.gameState.players).forEach(([pid, player]) => {
           const div = document.createElement('div');
           div.className = 'player-card';
           div.style.background = '#ecf0f1';
-          div.textContent = `${player.name}${id === state.playerId ? ' (You)' : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
-          playerList.appendChild(div);
+          div.textContent = `${player.name}${pid === state.gameState.host ? ' 👑' : ''}`;
+          playersList.appendChild(div);
         });
 
-        if (isHost && playerCount >= 2) {
+        if (isHost) {
           document.getElementById('startBtn').onclick = startGame;
         }
-        
-        document.getElementById('leaveBtn').onclick = leaveGame;
       }
-
-      else if (state.screen === 'game' && state.gameState) {
+      else if (state.screen === 'game') {
+        console.log('Rendering game screen');
+        const board = state.gameState.board || {};
         const currentPlayer = state.gameState.players[state.playerId];
         
         if (!currentPlayer) {
-          app.innerHTML = `<div class="error-msg"><h2>${t('firebaseInitError')}</h2><p>${t('playerNotFound')}</p></div>`;
+          console.error('Current player not found!');
           return;
         }
-        
-        const isMyTurn = state.gameState.playerOrder[state.gameState.currentPlayerIndex] === state.playerId;
+
+        // Calculate board dimensions
+        let minRow = 0, maxRow = 0, minCol = 0, maxCol = 0;
+        Object.keys(board).forEach(key => {
+          const [row, col] = key.split(',').map(Number);
+          minRow = Math.min(minRow, row);
+          maxRow = Math.max(maxRow, row);
+          minCol = Math.min(minCol, col);
+          maxCol = Math.max(maxCol, col);
+        });
+
+        // Add padding and account for pending placements
+        state.pendingPlacements.forEach(p => {
+          minRow = Math.min(minRow, p.row);
+          maxRow = Math.max(maxRow, p.row);
+          minCol = Math.min(minCol, p.col);
+          maxCol = Math.max(maxCol, p.col);
+        });
+
+        minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
+
+        const isMyTurn = state.gameState.currentPlayerIndex === state.gameState.playerOrder.indexOf(state.playerId);
         const currentTurnPlayer = state.gameState.players[state.gameState.playerOrder[state.gameState.currentPlayerIndex]];
 
-        let minRow = -2, maxRow = 2, minCol = -2, maxCol = 2;
-        const board = state.gameState.board || {};
-        
-        if (Object.keys(board).length > 0) {
-          minRow = 0; maxRow = 0; minCol = 0; maxCol = 0;
-          Object.keys(board).forEach(key => {
-            const [r, c] = key.split(',').map(Number);
-            minRow = Math.min(minRow, r);
-            maxRow = Math.max(maxRow, r);
-            minCol = Math.min(minCol, c);
-            maxCol = Math.max(maxCol, c);
-          });
-          minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
-        }
-
+        console.log('Creating game HTML structure...');
         app.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
-            <h2>${t('title')}</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <div><strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}</div>
-              <button onclick="leaveGame()" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">${t('leaveGame')}</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1>${t('title')}</h1>
+            <div style="background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">
+              <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}
             </div>
           </div>
-          <div id="scores" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"></div>
+          <div id="scores" style="margin-bottom: 20px;"></div>
           ${state.gameState.status === 'finished' ? `
-            <div style="background: #f39c12; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center; color: white; font-size: 18px;">
-              <strong>${t('gameOver')}</strong> ${t('winner')}: ${Object.values(state.gameState.players).sort((a, b) => b.score - a.score)[0].name}
+            <div class="status-bar" style="background: #e74c3c;">
+              ${t('gameOver')} ${t('winner')}: ${Object.entries(state.gameState.players).sort((a, b) => b[1].score - a[1].score)[0][1].name}
             </div>
           ` : ''}
           ${isMyTurn && state.gameState.status === 'playing' ? `
@@ -1022,6 +932,12 @@
 
         console.log('Creating board...');
         const boardDiv = document.getElementById('board');
+        
+        // Check if current player has made any action (placed tile or swapped)
+        const currentPlayerHasActed = state.pendingPlacements.length > 0 || 
+                                       (state.gameState.lastMove && 
+                                        state.gameState.lastMove.playerId === state.playerId);
+        
         for (let row = minRow; row <= maxRow; row++) {
           const rowDiv = document.createElement('div');
           rowDiv.className = 'board-row';
@@ -1063,7 +979,13 @@
             };
 
             if (tile) {
-              cell.appendChild(renderTile(tile));
+              // Check if this tile is part of the last move and should be highlighted
+              const isLastMove = !currentPlayerHasActed && 
+                                state.gameState.lastMove && 
+                                state.gameState.lastMove.tiles && 
+                                state.gameState.lastMove.tiles.includes(key);
+              
+              cell.appendChild(renderTile(tile, { lastMove: isLastMove }));
             }
             if (pending) {
               const pendingTile = renderTile(pending.tile, {
