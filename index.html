@@ -851,11 +851,26 @@
         // Horizontal placement - score the horizontal line ONCE
         const row = rows[0];
         let rowTiles = [];
+        
+        // Find the contiguous segment containing this row
+        let startCol = -50;
+        let endCol = 50;
+        
+        // Find where tiles start
         for (let c = -50; c <= 50; c++) {
+          if (board[`${row},${c}`]) {
+            startCol = c;
+            break;
+          }
+        }
+        
+        // Collect tiles from start until gap
+        for (let c = startCol; c <= 50; c++) {
           const tile = board[`${row},${c}`];
           if (tile) rowTiles.push(tile);
-          else if (rowTiles.length > 0) break;
+          else break;
         }
+        
         debugInfo.push(`Horizontal Line (Row ${row}):`);
         debugInfo.push(`  ${rowTiles.length} tiles: ${rowTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
         if (rowTiles.length > 1) {
@@ -871,11 +886,25 @@
         // Score each PERPENDICULAR (vertical) line for each placed tile
         placements.forEach((p, idx) => {
           let colTiles = [];
+          
+          // Find the contiguous segment containing this placement
+          let startRow = -50;
+          
+          // Find where tiles start in this column
           for (let r = -50; r <= 50; r++) {
+            if (board[`${r},${p.col}`]) {
+              startRow = r;
+              break;
+            }
+          }
+          
+          // Collect tiles from start until gap
+          for (let r = startRow; r <= 50; r++) {
             const tile = board[`${r},${p.col}`];
             if (tile) colTiles.push(tile);
-            else if (colTiles.length > 0) break;
+            else break;
           }
+          
           debugInfo.push(`Vertical Line ${idx + 1} (Col ${p.col}):`);
           debugInfo.push(`  ${colTiles.length} tiles: ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
           if (colTiles.length > 1) {
@@ -892,11 +921,25 @@
         // Vertical placement - score the vertical line ONCE
         const col = cols[0];
         let colTiles = [];
+        
+        // Find the contiguous segment containing this column
+        let startRow = -50;
+        
+        // Find where tiles start
         for (let r = -50; r <= 50; r++) {
+          if (board[`${r},${col}`]) {
+            startRow = r;
+            break;
+          }
+        }
+        
+        // Collect tiles from start until gap
+        for (let r = startRow; r <= 50; r++) {
           const tile = board[`${r},${col}`];
           if (tile) colTiles.push(tile);
-          else if (colTiles.length > 0) break;
+          else break;
         }
+        
         debugInfo.push(`Vertical Line (Col ${col}):`);
         debugInfo.push(`  ${colTiles.length} tiles: ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
         if (colTiles.length > 1) {
@@ -912,11 +955,25 @@
         // Score each PERPENDICULAR (horizontal) line for each placed tile
         placements.forEach((p, idx) => {
           let rowTiles = [];
+          
+          // Find the contiguous segment containing this placement
+          let startCol = -50;
+          
+          // Find where tiles start in this row
           for (let c = -50; c <= 50; c++) {
+            if (board[`${p.row},${c}`]) {
+              startCol = c;
+              break;
+            }
+          }
+          
+          // Collect tiles from start until gap
+          for (let c = startCol; c <= 50; c++) {
             const tile = board[`${p.row},${c}`];
             if (tile) rowTiles.push(tile);
-            else if (rowTiles.length > 0) break;
+            else break;
           }
+          
           debugInfo.push(`Horizontal Line ${idx + 1} (Row ${p.row}):`);
           debugInfo.push(`  ${rowTiles.length} tiles: ${rowTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
           if (rowTiles.length > 1) {
