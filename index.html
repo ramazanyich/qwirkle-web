@@ -852,20 +852,28 @@
         const row = rows[0];
         let rowTiles = [];
         
-        // Find the contiguous segment containing this row
-        let startCol = -50;
-        let endCol = 50;
+        // Use the first placement as starting point and go both directions
+        const startCol = cols[0];
         
-        // Find where tiles start
-        for (let c = -50; c <= 50; c++) {
-          if (board[`${row},${c}`]) {
-            startCol = c;
-            break;
-          }
+        // Go LEFT from first placement
+        let leftTiles = [];
+        for (let c = startCol - 1; c >= -50; c--) {
+          const tile = board[`${row},${c}`];
+          if (tile) leftTiles.unshift(tile);
+          else break;
         }
         
-        // Collect tiles from start until gap
-        for (let c = startCol; c <= 50; c++) {
+        // Add all placed tiles (they're contiguous)
+        rowTiles = [...leftTiles];
+        const minPlacedCol = Math.min(...cols);
+        const maxPlacedCol = Math.max(...cols);
+        for (let c = minPlacedCol; c <= maxPlacedCol; c++) {
+          const tile = board[`${row},${c}`];
+          if (tile) rowTiles.push(tile);
+        }
+        
+        // Go RIGHT from last placement
+        for (let c = maxPlacedCol + 1; c <= 50; c++) {
           const tile = board[`${row},${c}`];
           if (tile) rowTiles.push(tile);
           else break;
@@ -887,22 +895,23 @@
         placements.forEach((p, idx) => {
           let colTiles = [];
           
-          // Find the contiguous segment containing this placement
-          let startRow = -50;
-          
-          // Find where tiles start in this column
-          for (let r = -50; r <= 50; r++) {
-            if (board[`${r},${p.col}`]) {
-              startRow = r;
-              break;
-            }
+          // Start from the placed tile and collect in both directions
+          // Go UP (decreasing row)
+          let upTiles = [];
+          for (let r = p.row - 1; r >= -50; r--) {
+            const tile = board[`${r},${p.col}`];
+            if (tile) upTiles.unshift(tile); // Add to front
+            else break; // Stop at gap
           }
           
-          // Collect tiles from start until gap
-          for (let r = startRow; r <= 50; r++) {
+          // Add the placed tile itself
+          colTiles = [...upTiles, board[`${p.row},${p.col}`]];
+          
+          // Go DOWN (increasing row)
+          for (let r = p.row + 1; r <= 50; r++) {
             const tile = board[`${r},${p.col}`];
             if (tile) colTiles.push(tile);
-            else break;
+            else break; // Stop at gap
           }
           
           debugInfo.push(`Vertical Line ${idx + 1} (Col ${p.col}):`);
@@ -922,19 +931,28 @@
         const col = cols[0];
         let colTiles = [];
         
-        // Find the contiguous segment containing this column
-        let startRow = -50;
+        // Use the first placement as starting point and go both directions
+        const startRow = rows[0];
         
-        // Find where tiles start
-        for (let r = -50; r <= 50; r++) {
-          if (board[`${r},${col}`]) {
-            startRow = r;
-            break;
-          }
+        // Go UP from first placement
+        let upTiles = [];
+        for (let r = startRow - 1; r >= -50; r--) {
+          const tile = board[`${r},${col}`];
+          if (tile) upTiles.unshift(tile);
+          else break;
         }
         
-        // Collect tiles from start until gap
-        for (let r = startRow; r <= 50; r++) {
+        // Add all placed tiles (they're contiguous)
+        colTiles = [...upTiles];
+        const minPlacedRow = Math.min(...rows);
+        const maxPlacedRow = Math.max(...rows);
+        for (let r = minPlacedRow; r <= maxPlacedRow; r++) {
+          const tile = board[`${r},${col}`];
+          if (tile) colTiles.push(tile);
+        }
+        
+        // Go DOWN from last placement
+        for (let r = maxPlacedRow + 1; r <= 50; r++) {
           const tile = board[`${r},${col}`];
           if (tile) colTiles.push(tile);
           else break;
@@ -956,22 +974,23 @@
         placements.forEach((p, idx) => {
           let rowTiles = [];
           
-          // Find the contiguous segment containing this placement
-          let startCol = -50;
-          
-          // Find where tiles start in this row
-          for (let c = -50; c <= 50; c++) {
-            if (board[`${p.row},${c}`]) {
-              startCol = c;
-              break;
-            }
+          // Start from the placed tile and collect in both directions
+          // Go LEFT (decreasing col)
+          let leftTiles = [];
+          for (let c = p.col - 1; c >= -50; c--) {
+            const tile = board[`${p.row},${c}`];
+            if (tile) leftTiles.unshift(tile); // Add to front
+            else break; // Stop at gap
           }
           
-          // Collect tiles from start until gap
-          for (let c = startCol; c <= 50; c++) {
+          // Add the placed tile itself
+          rowTiles = [...leftTiles, board[`${p.row},${p.col}`]];
+          
+          // Go RIGHT (increasing col)
+          for (let c = p.col + 1; c <= 50; c++) {
             const tile = board[`${p.row},${c}`];
             if (tile) rowTiles.push(tile);
-            else break;
+            else break; // Stop at gap
           }
           
           debugInfo.push(`Horizontal Line ${idx + 1} (Row ${p.row}):`);
