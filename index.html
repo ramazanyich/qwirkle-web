@@ -834,25 +834,31 @@
       let totalScore = 0;
       const scoredLines = new Set();
 
-      placements.forEach(p => {
-        const rowKey = `row-${p.row}`;
-        if (!scoredLines.has(rowKey)) {
-          let rowTiles = [];
-          for (let c = -50; c <= 50; c++) {
-            const tile = board[`${p.row},${c}`];
-            if (tile) rowTiles.push(tile);
-            else if (rowTiles.length > 0) break;
-          }
-          if (rowTiles.length > 1) {
-            let score = rowTiles.length;
-            if (rowTiles.length === 6) score += 6;
-            totalScore += score;
-            scoredLines.add(rowKey);
-          }
-        }
+      // Determine if placement is horizontal or vertical
+      const rows = placements.map(p => p.row);
+      const cols = placements.map(p => p.col);
+      const sameRow = rows.every(r => r === rows[0]);
+      const sameCol = cols.every(c => c === cols[0]);
 
-        const colKey = `col-${p.col}`;
-        if (!scoredLines.has(colKey)) {
+      if (sameRow) {
+        // Horizontal placement - score the horizontal line ONCE
+        const row = rows[0];
+        let rowTiles = [];
+        for (let c = -50; c <= 50; c++) {
+          const tile = board[`${row},${c}`];
+          if (tile) rowTiles.push(tile);
+          else if (rowTiles.length > 0) break;
+        }
+        if (rowTiles.length > 1) {
+          let score = rowTiles.length;
+          if (rowTiles.length === 6) score += 6;
+          totalScore += score;
+        } else if (rowTiles.length === 1) {
+          // Single tile, will be scored at the end if nothing else scores
+        }
+        
+        // Score each PERPENDICULAR (vertical) line for each placed tile
+        placements.forEach(p => {
           let colTiles = [];
           for (let r = -50; r <= 50; r++) {
             const tile = board[`${r},${p.col}`];
@@ -863,12 +869,44 @@
             let score = colTiles.length;
             if (colTiles.length === 6) score += 6;
             totalScore += score;
-            scoredLines.add(colKey);
           }
+        });
+      } else if (sameCol) {
+        // Vertical placement - score the vertical line ONCE
+        const col = cols[0];
+        let colTiles = [];
+        for (let r = -50; r <= 50; r++) {
+          const tile = board[`${r},${col}`];
+          if (tile) colTiles.push(tile);
+          else if (colTiles.length > 0) break;
         }
-      });
+        if (colTiles.length > 1) {
+          let score = colTiles.length;
+          if (colTiles.length === 6) score += 6;
+          totalScore += score;
+        } else if (colTiles.length === 1) {
+          // Single tile, will be scored at the end if nothing else scores
+        }
+        
+        // Score each PERPENDICULAR (horizontal) line for each placed tile
+        placements.forEach(p => {
+          let rowTiles = [];
+          for (let c = -50; c <= 50; c++) {
+            const tile = board[`${p.row},${c}`];
+            if (tile) rowTiles.push(tile);
+            else if (rowTiles.length > 0) break;
+          }
+          if (rowTiles.length > 1) {
+            let score = rowTiles.length;
+            if (rowTiles.length === 6) score += 6;
+            totalScore += score;
+          }
+        });
+      }
 
+      // If no lines were scored (single tile not connecting to anything), score the placement count
       if (totalScore === 0 && placements.length > 0) totalScore = placements.length;
+      
       return totalScore;
     }
 
