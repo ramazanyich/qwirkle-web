@@ -276,7 +276,9 @@
         pleaseWait: 'Please wait...',
         leaveGame: 'Leave Game',
         confirmLeave: 'Are you sure you want to leave this game? You will not be able to rejoin.',
-        playerLeft: 'left the game'
+        playerLeft: 'left the game',
+        thisMove: 'This Move:',
+        points: 'points'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -330,7 +332,9 @@
         pleaseWait: 'Пожалуйста, подождите...',
         leaveGame: 'Выйти из игры',
         confirmLeave: 'Вы уверены, что хотите выйти из игры? Вы не сможете вернуться.',
-        playerLeft: 'вышел из игры'
+        playerLeft: 'вышел из игры',
+        thisMove: 'Этот ход:',
+        points: 'очков'
       }
     };
 
@@ -1147,6 +1151,13 @@
               • <strong>${t('swapTiles')}</strong> ${t('swapTilesDesc')}<br>
               • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
             </div>
+            ${state.pendingPlacements.length > 0 ? `
+              <div id="scorePreview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">${t('thisMove')}</div>
+                <div style="font-size: 48px; font-weight: bold;" id="scoreValue">calculating...</div>
+                <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">${t('points')}</div>
+              </div>
+            ` : ''}
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
               <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
               <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
@@ -1379,6 +1390,34 @@
             render(); 
           };
           if (swapBtn) swapBtn.onclick = swapTiles;
+          
+          // Calculate and display score preview if there are pending placements
+          if (state.pendingPlacements.length > 0) {
+            const scoreValueEl = document.getElementById('scoreValue');
+            if (scoreValueEl) {
+              try {
+                // Create temporary board with pending placements
+                const tempBoard = { ...board };
+                state.pendingPlacements.forEach(p => {
+                  tempBoard[`${p.row},${p.col}`] = p.tile;
+                });
+                
+                // Calculate score
+                const score = calculateScore(state.pendingPlacements, tempBoard);
+                
+                // Display with animation
+                scoreValueEl.style.opacity = '0';
+                setTimeout(() => {
+                  scoreValueEl.textContent = score;
+                  scoreValueEl.style.opacity = '1';
+                  scoreValueEl.style.transition = 'opacity 0.3s ease-in-out';
+                }, 50);
+              } catch (error) {
+                console.error('Error calculating score preview:', error);
+                scoreValueEl.textContent = '?';
+              }
+            }
+          }
         }
         
         // Add leave game button handler
