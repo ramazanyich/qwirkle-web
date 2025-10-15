@@ -1317,7 +1317,7 @@
                 <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">${t('thisMove')}</div>
                 <div style="font-size: 48px; font-weight: bold; margin-bottom: 10px;" id="scoreValue">calculating...</div>
                 <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">${t('points')}</div>
-                <div id="scoreBreakdown" style="font-size: 11px; opacity: 0.95; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; line-height: 1.4;"></div>
+                <div id="scoreBreakdown" style="font-size: 11px; opacity: 0.95; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.4;"></div>
               </div>
             ` : ''}
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
@@ -1576,7 +1576,7 @@
                   scoreValueEl.style.opacity = '1';
                   scoreValueEl.style.transition = 'opacity 0.3s ease-in-out';
                   
-                  // Show full debug breakdown
+                  // Show debug breakdown
                   scoreBreakdownEl.textContent = result.debugInfo.join('\n');
                   scoreBreakdownEl.style.opacity = '1';
                   scoreBreakdownEl.style.transition = 'opacity 0.3s ease-in-out';
