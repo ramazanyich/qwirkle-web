@@ -253,7 +253,7 @@
         removeTile: 'Remove a placed tile:',
         removeTileDesc: 'Click on a yellow tile to remove it from the board',
         playButton: 'Play',
-        clearBoard: 'Clear Board',
+        clearBoard: 'Revert Tiles Placement',
         swap: 'Swap',
         tile: 'tile',
         pts: 'pts',
@@ -310,7 +310,7 @@
         removeTile: 'Убрать поставленную фишку:',
         removeTileDesc: 'Нажмите на жёлтую фишку на доске',
         playButton: 'Сыграть',
-        clearBoard: 'Очистить доску',
+        clearBoard: 'Отменить размещение плиток',
         swap: 'Обменять',
         tile: 'фишку',
         pts: 'очк.',
@@ -831,12 +831,6 @@
       // Ensure board is an object
       board = board || {};
       
-      const debugLogs = [];
-      const log = (msg) => {
-        console.log(msg);
-        debugLogs.push(msg);
-      };
-      
       let totalScore = 0;
 
       // Determine if placement is horizontal or vertical
@@ -850,18 +844,15 @@
         const row = rows[0];
         let rowTiles = [];
         
-        log(`\n=== HORIZONTAL LINE (Row ${row}) ===`);
         
         // Get the range of placed tiles
         const minPlacedCol = Math.min(...cols);
         const maxPlacedCol = Math.max(...cols);
         
         // Go LEFT from the leftmost placement
-        log('Going LEFT from Col ' + minPlacedCol);
         let leftTiles = [];
         for (let c = minPlacedCol - 1; c >= -50; c--) {
           const tile = board[`${row},${c}`];
-          log(`  Col ${c}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
           if (tile) leftTiles.unshift(tile);
           else break;
         }
@@ -870,20 +861,16 @@
         rowTiles = [...leftTiles];
         
         // Add all placed tiles (they're contiguous)
-        log(`Adding placed tiles from Col ${minPlacedCol} to ${maxPlacedCol}`);
         for (let c = minPlacedCol; c <= maxPlacedCol; c++) {
           const tile = board[`${row},${c}`];
           if (tile) {
-            log(`  Col ${c}: ${tile.color} ${tile.shape}`);
             rowTiles.push(tile);
           }
         }
         
         // Go RIGHT from the rightmost placement
-        log('Going RIGHT from Col ' + maxPlacedCol);
         for (let c = maxPlacedCol + 1; c <= 50; c++) {
           const tile = board[`${row},${c}`];
-          log(`  Col ${c}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
           if (tile) rowTiles.push(tile);
           else break;
         }
@@ -891,50 +878,39 @@
         if (rowTiles.length > 1) {
           let score = rowTiles.length;
           if (rowTiles.length === 6) score += 6;
-          log(`Row ${row} horizontal: ${rowTiles.length} tiles - ${rowTiles.map(t => `${t.color} ${t.shape}`).join(', ')} → ${score} points`);
           totalScore += score;
         } else {
-          log(`Row ${row}: Only 1 tile, no score`);
         }
         
         // Score each PERPENDICULAR (vertical) line for each placed tile
         placements.forEach((p, idx) => {
-          log(`\n=== PERPENDICULAR ${idx + 1}: Col ${p.col} at Row ${p.row} ===`);
           let colTiles = [];
           
           // Start from the placed tile and collect in both directions
           // Go UP (decreasing row)
-          log('Going UP:');
           let upTiles = [];
           for (let r = p.row - 1; r >= -50; r--) {
             const tile = board[`${r},${p.col}`];
-            log(`  Row ${r}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
             if (tile) upTiles.unshift(tile); // Add to front
             else break; // Stop at gap
           }
           
           // Add the placed tile itself
           colTiles = [...upTiles, board[`${p.row},${p.col}`]];
-          log(`After UP + placed: ${colTiles.length} tiles`);
           
           // Go DOWN (increasing row)
-          log('Going DOWN:');
           for (let r = p.row + 1; r <= 50; r++) {
             const tile = board[`${r},${p.col}`];
-            log(`  Row ${r}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
             if (tile) colTiles.push(tile);
             else break; // Stop at gap
           }
           
-          log(`Col ${p.col} FINAL: ${colTiles.length} tiles - ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
           
           if (colTiles.length > 1) {
             let score = colTiles.length;
             if (colTiles.length === 6) score += 6;
             totalScore += score;
-            log(`  → Scored ${score} points`);
           } else {
-            log(`  → No score (only 1 tile)`);
           }
         });
       } else if (sameCol) {
@@ -942,18 +918,15 @@
         const col = cols[0];
         let colTiles = [];
         
-        log(`\n=== VERTICAL LINE (Col ${col}) ===`);
         
         // Get the range of placed tiles
         const minPlacedRow = Math.min(...rows);
         const maxPlacedRow = Math.max(...rows);
         
         // Go UP from the topmost placement
-        log('Going UP from Row ' + minPlacedRow);
         let upTiles = [];
         for (let r = minPlacedRow - 1; r >= -50; r--) {
           const tile = board[`${r},${col}`];
-          log(`  Row ${r}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
           if (tile) upTiles.unshift(tile);
           else break;
         }
@@ -962,32 +935,25 @@
         colTiles = [...upTiles];
         
         // Add all placed tiles (they're contiguous)
-        log(`Adding placed tiles from Row ${minPlacedRow} to ${maxPlacedRow}`);
         for (let r = minPlacedRow; r <= maxPlacedRow; r++) {
           const tile = board[`${r},${col}`];
           if (tile) {
-            log(`  Row ${r}: ${tile.color} ${tile.shape}`);
             colTiles.push(tile);
           }
         }
         
         // Go DOWN from the bottommost placement
-        log('Going DOWN from Row ' + maxPlacedRow);
         for (let r = maxPlacedRow + 1; r <= 50; r++) {
           const tile = board[`${r},${col}`];
-          log(`  Row ${r}: ${tile ? tile.color + ' ' + tile.shape : 'EMPTY - STOP'}`);
           if (tile) colTiles.push(tile);
           else break;
         }
         
-        log(`Col ${col} vertical: ${colTiles.length} tiles - ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
         if (colTiles.length > 1) {
           let score = colTiles.length;
           if (colTiles.length === 6) score += 6;
-          log(`  → Scored ${score} points`);
           totalScore += score;
         } else {
-          log(`  → No score (only 1 tile)`);
         }
         
         // Score each PERPENDICULAR (horizontal) line for each placed tile
@@ -1024,20 +990,13 @@
       // If no lines were scored (single tile not connecting to anything), score the placement count
       if (totalScore === 0 && placements.length > 0) {
         totalScore = placements.length;
-        log('No lines scored - using placement count: ' + totalScore);
       }
       
-      log(`\n==== TOTAL SCORE: ${totalScore} ====`);
-      
-      // Show detailed scoring in alert for mobile debugging
-      if (window.showMobileScoringDebug) {
-        alert(debugLogs.join('\n'));
-      }
       
       // Return both score and debug info for compatibility
       return {
         score: totalScore,
-        debugInfo: debugLogs
+        debugInfo: []
       };
     }
 
@@ -1572,8 +1531,8 @@
           // Calculate and display score preview if there are pending placements
           if (state.pendingPlacements.length > 0) {
             const scoreValueEl = document.getElementById('scoreValue');
-            const scoreBreakdownEl = document.getElementById('scoreBreakdown');
-            if (scoreValueEl && scoreBreakdownEl) {
+            const scoreMessageEl = document.getElementById('scoreMessage');
+            if (scoreValueEl && scoreMessageEl) {
               try {
                 // Create temporary board with pending placements
                 const tempBoard = { ...board };
@@ -1581,26 +1540,40 @@
                   tempBoard[`${p.row},${p.col}`] = p.tile;
                 });
                 
-                // Calculate score
-                const result = calculateScore(state.pendingPlacements, tempBoard);
+                // Validate placement first
+                const validation = validatePlacement(state.pendingPlacements, board);
                 
-                // Display with animation
-                scoreValueEl.style.opacity = '0';
-                scoreBreakdownEl.style.opacity = '0';
-                setTimeout(() => {
-                  scoreValueEl.textContent = result.score;
+                if (!validation.valid) {
+                  // Show validation error instead of score
+                  scoreValueEl.textContent = '✗';
                   scoreValueEl.style.opacity = '1';
-                  scoreValueEl.style.transition = 'opacity 0.3s ease-in-out';
+                  scoreValueEl.style.color = '#ff6b6b';
+                  scoreMessageEl.textContent = validation.reason;
+                  scoreMessageEl.style.opacity = '1';
+                  scoreMessageEl.style.color = '#ff6b6b';
+                } else {
+                  // Calculate score
+                  const result = calculateScore(state.pendingPlacements, tempBoard);
                   
-                  // Show debug breakdown
-                  scoreBreakdownEl.textContent = result.debugInfo.join('\n');
-                  scoreBreakdownEl.style.opacity = '1';
-                  scoreBreakdownEl.style.transition = 'opacity 0.3s ease-in-out';
-                }, 50);
+                  // Display with animation
+                  scoreValueEl.style.opacity = '0';
+                  scoreMessageEl.style.opacity = '0';
+                  setTimeout(() => {
+                    scoreValueEl.textContent = result.score;
+                    scoreValueEl.style.opacity = '1';
+                    scoreValueEl.style.color = 'white';
+                    scoreValueEl.style.transition = 'opacity 0.3s ease-in-out';
+                    
+                    scoreMessageEl.textContent = t('points');
+                    scoreMessageEl.style.opacity = '1';
+                    scoreMessageEl.style.color = 'white';
+                    scoreMessageEl.style.transition = 'opacity 0.3s ease-in-out';
+                  }, 50);
+                }
               } catch (error) {
                 console.error('Error calculating score preview:', error);
                 scoreValueEl.textContent = '?';
-                scoreBreakdownEl.textContent = 'Error: ' + error.message;
+                scoreMessageEl.textContent = 'Error';
               }
             }
           }
