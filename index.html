@@ -807,7 +807,7 @@
         }
       }
 
-      if (Object.keys(board).length === 0) return { valid: true, score: calculateScore(placements, newBoard) };
+      if (Object.keys(board).length === 0) return { valid: true, score: calculateScore(placements, newBoard).score };
 
       let connected = false;
       for (const p of placements) {
@@ -824,12 +824,16 @@
       }
 
       if (!connected) return { valid: false, reason: 'Must connect to existing tiles' };
-      return { valid: true, score: calculateScore(placements, newBoard) };
+      return { valid: true, score: calculateScore(placements, newBoard).score };
     }
 
     function calculateScore(placements, board) {
       // Ensure board is an object
       board = board || {};
+      
+      const debugInfo = [];
+      debugInfo.push('=== SCORING DETAILS ===');
+      debugInfo.push(`Placed: ${placements.map(p => `${p.tile.color} ${p.tile.shape} at (${p.row},${p.col})`).join(', ')}`);
       
       let totalScore = 0;
       const scoredLines = new Set();
@@ -840,6 +844,9 @@
       const sameRow = rows.every(r => r === rows[0]);
       const sameCol = cols.every(c => c === cols[0]);
 
+      debugInfo.push(`Type: ${sameRow ? 'HORIZONTAL' : sameCol ? 'VERTICAL' : 'SINGLE'}`);
+      debugInfo.push('');
+
       if (sameRow) {
         // Horizontal placement - score the horizontal line ONCE
         const row = rows[0];
@@ -849,27 +856,37 @@
           if (tile) rowTiles.push(tile);
           else if (rowTiles.length > 0) break;
         }
+        debugInfo.push(`Horizontal Line (Row ${row}):`);
+        debugInfo.push(`  ${rowTiles.length} tiles: ${rowTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
         if (rowTiles.length > 1) {
           let score = rowTiles.length;
           if (rowTiles.length === 6) score += 6;
+          debugInfo.push(`  Score: ${score} points`);
           totalScore += score;
-        } else if (rowTiles.length === 1) {
-          // Single tile, will be scored at the end if nothing else scores
+        } else {
+          debugInfo.push(`  Score: 0 (need 2+ tiles)`);
         }
+        debugInfo.push('');
         
         // Score each PERPENDICULAR (vertical) line for each placed tile
-        placements.forEach(p => {
+        placements.forEach((p, idx) => {
           let colTiles = [];
           for (let r = -50; r <= 50; r++) {
             const tile = board[`${r},${p.col}`];
             if (tile) colTiles.push(tile);
             else if (colTiles.length > 0) break;
           }
+          debugInfo.push(`Vertical Line ${idx + 1} (Col ${p.col}):`);
+          debugInfo.push(`  ${colTiles.length} tiles: ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
           if (colTiles.length > 1) {
             let score = colTiles.length;
             if (colTiles.length === 6) score += 6;
+            debugInfo.push(`  Score: ${score} points`);
             totalScore += score;
+          } else {
+            debugInfo.push(`  Score: 0 (need 2+ tiles)`);
           }
+          debugInfo.push('');
         });
       } else if (sameCol) {
         // Vertical placement - score the vertical line ONCE
@@ -880,34 +897,63 @@
           if (tile) colTiles.push(tile);
           else if (colTiles.length > 0) break;
         }
+        debugInfo.push(`Vertical Line (Col ${col}):`);
+        debugInfo.push(`  ${colTiles.length} tiles: ${colTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
         if (colTiles.length > 1) {
           let score = colTiles.length;
           if (colTiles.length === 6) score += 6;
+          debugInfo.push(`  Score: ${score} points`);
           totalScore += score;
-        } else if (colTiles.length === 1) {
-          // Single tile, will be scored at the end if nothing else scores
+        } else {
+          debugInfo.push(`  Score: 0 (need 2+ tiles)`);
         }
+        debugInfo.push('');
         
         // Score each PERPENDICULAR (horizontal) line for each placed tile
-        placements.forEach(p => {
+        placements.forEach((p, idx) => {
           let rowTiles = [];
           for (let c = -50; c <= 50; c++) {
             const tile = board[`${p.row},${c}`];
             if (tile) rowTiles.push(tile);
             else if (rowTiles.length > 0) break;
           }
+          debugInfo.push(`Horizontal Line ${idx + 1} (Row ${p.row}):`);
+          debugInfo.push(`  ${rowTiles.length} tiles: ${rowTiles.map(t => `${t.color} ${t.shape}`).join(', ')}`);
           if (rowTiles.length > 1) {
             let score = rowTiles.length;
             if (rowTiles.length === 6) score += 6;
+            debugInfo.push(`  Score: ${score} points`);
             totalScore += score;
+          } else {
+            debugInfo.push(`  Score: 0 (need 2+ tiles)`);
           }
+          debugInfo.push('');
         });
       }
 
       // If no lines were scored (single tile not connecting to anything), score the placement count
-      if (totalScore === 0 && placements.length > 0) totalScore = placements.length;
+      if (totalScore === 0 && placements.length > 0) {
+        debugInfo.push('No lines scored - using placement count');
+        totalScore = placements.length;
+      }
       
-      return totalScore;
+      debugInfo.push('====================');
+      debugInfo.push(`TOTAL SCORE: ${totalScore}`);
+      
+      // Show alert with scoring details
+      // Only show during actual play, not during preview (to avoid spam)
+      if (window.showScoringDebug) {
+        alert(debugInfo.join('\n'));
+      }
+      
+      // Always log to console for debugging
+      console.log(debugInfo.join('\n'));
+      
+      // Return both score and debug info
+      return {
+        score: totalScore,
+        debugInfo: debugInfo
+      };
     }
 
     async function playTiles() {
@@ -916,7 +962,13 @@
       try {
         const currentBoard = state.gameState.board || {};
         
+        // Enable scoring debug alert for this play
+        window.showScoringDebug = true;
+        
         const validation = validatePlacement(state.pendingPlacements, currentBoard);
+        
+        // Disable debug flag after validation
+        window.showScoringDebug = false;
         
         if (!validation.valid) { 
           alert(validation.reason); 
@@ -1192,10 +1244,10 @@
               • <strong>${t('removeTile')}</strong> ${t('removeTileDesc')}
             </div>
             ${state.pendingPlacements.length > 0 ? `
-              <div id="scorePreview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">${t('thisMove')}</div>
-                <div style="font-size: 48px; font-weight: bold;" id="scoreValue">calculating...</div>
-                <div style="font-size: 14px; opacity: 0.9; margin-top: 5px;">${t('points')}</div>
+              <div id="scorePreview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px; font-weight: bold;">${t('thisMove')}</div>
+                <div style="font-size: 32px; font-weight: bold; margin-bottom: 10px;" id="scoreValue">calculating...</div>
+                <div id="scoreBreakdown" style="font-size: 12px; opacity: 0.9; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
               </div>
             ` : ''}
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
@@ -1434,7 +1486,8 @@
           // Calculate and display score preview if there are pending placements
           if (state.pendingPlacements.length > 0) {
             const scoreValueEl = document.getElementById('scoreValue');
-            if (scoreValueEl) {
+            const scoreBreakdownEl = document.getElementById('scoreBreakdown');
+            if (scoreValueEl && scoreBreakdownEl) {
               try {
                 // Create temporary board with pending placements
                 const tempBoard = { ...board };
@@ -1442,19 +1495,27 @@
                   tempBoard[`${p.row},${p.col}`] = p.tile;
                 });
                 
-                // Calculate score
-                const score = calculateScore(state.pendingPlacements, tempBoard);
+                // Calculate score with debug info
+                const result = calculateScore(state.pendingPlacements, tempBoard);
                 
                 // Display with animation
                 scoreValueEl.style.opacity = '0';
+                scoreBreakdownEl.style.opacity = '0';
                 setTimeout(() => {
-                  scoreValueEl.textContent = score;
+                  scoreValueEl.textContent = result.score + ' ' + t('points');
                   scoreValueEl.style.opacity = '1';
                   scoreValueEl.style.transition = 'opacity 0.3s ease-in-out';
+                  
+                  // Show breakdown without the header and total (those are shown separately)
+                  const breakdown = result.debugInfo.slice(2, -2).join('\n');
+                  scoreBreakdownEl.textContent = breakdown;
+                  scoreBreakdownEl.style.opacity = '1';
+                  scoreBreakdownEl.style.transition = 'opacity 0.3s ease-in-out';
                 }, 50);
               } catch (error) {
                 console.error('Error calculating score preview:', error);
                 scoreValueEl.textContent = '?';
+                scoreBreakdownEl.textContent = 'Error: ' + error.message;
               }
             }
           }
