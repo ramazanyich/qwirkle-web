@@ -278,7 +278,8 @@
         confirmLeave: 'Are you sure you want to leave this game? You will not be able to rejoin.',
         playerLeft: 'left the game',
         thisMove: 'This Move:',
-        points: 'points'
+        points: 'points',
+        you: 'You'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -334,7 +335,8 @@
         confirmLeave: 'Вы уверены, что хотите выйти из игры? Вы не сможете вернуться.',
         playerLeft: 'вышел из игры',
         thisMove: 'Этот ход:',
-        points: 'очков'
+        points: 'очков',
+        you: 'Вы'
       }
     };
 
@@ -1068,7 +1070,7 @@
           const div = document.createElement('div');
           div.className = 'player-card';
           div.style.background = '#ecf0f1';
-          div.textContent = `${player.name}${id === state.playerId ? ' (You)' : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
+          div.textContent = `${player.name}${id === state.playerId ? ` (${t('you')})` : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
           playerList.appendChild(div);
         });
 
@@ -1211,7 +1213,7 @@
           }
           
           const nameSpan = document.createElement('div');
-          nameSpan.textContent = `${p.name}${isYou ? ' (You)' : ''}${isCurrent ? ' 🎯' : ''}`;
+          nameSpan.textContent = `${p.name}${isYou ? ` (${t('you')})` : ''}${isCurrent ? ' 🎯' : ''}`;
           nameSpan.style.fontSize = '18px';
           nameSpan.style.marginBottom = '5px';
           
