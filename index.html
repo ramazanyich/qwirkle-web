@@ -756,7 +756,7 @@
         const row = rows[0];
         
         // Check the main horizontal line
-        linesToCheck.add(`row-${row}`);
+        linesToCheck.add(`row:${row}`);
         
         // Find the full extent of the horizontal line (including existing tiles)
         let minCol = Math.min(...cols);
@@ -769,14 +769,14 @@
         // Check ALL columns in the affected range
         for (let c = minCol; c <= maxCol; c++) {
           if (newBoard[`${row},${c}`]) {
-            linesToCheck.add(`col-${c}`);
+            linesToCheck.add(`col:${c}`);
           }
         }
       } else {
         const col = cols[0];
         
         // Check the main vertical line
-        linesToCheck.add(`col-${col}`);
+        linesToCheck.add(`col:${col}`);
         
         // Find the full extent of the vertical line (including existing tiles)
         let minRow = Math.min(...rows);
@@ -789,7 +789,7 @@
         // Check ALL rows in the affected range
         for (let r = minRow; r <= maxRow; r++) {
           if (newBoard[`${r},${col}`]) {
-            linesToCheck.add(`row-${r}`);
+            linesToCheck.add(`row:${r}`);
           }
         }
       }
@@ -797,7 +797,7 @@
       console.log('Lines to check:', Array.from(linesToCheck).sort());
 
       for (const line of linesToCheck) {
-        const [type, pos] = line.split('-');
+        const [type, pos] = line.split(':');
         const position = parseInt(pos);
         
         // Find all contiguous segments in this line
