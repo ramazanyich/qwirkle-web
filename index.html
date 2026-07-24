@@ -306,7 +306,15 @@
         playerLeft: 'left the game',
         thisMove: 'This Move:',
         points: 'points',
-        you: 'You'
+        you: 'You',
+        errNoTiles: 'No tiles placed',
+        errSameLine: 'Tiles must be in same row or column',
+        errContinuous: 'Tiles must be continuous',
+        errLineTooLong: 'Line cannot be longer than 6',
+        errLineShareAttr: 'Line must share color or shape',
+        errDupShape: 'Duplicate tiles - same color requires different shapes',
+        errDupColor: 'Duplicate tiles - same shape requires different colors',
+        errMustConnect: 'Must connect to existing tiles'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -363,7 +371,15 @@
         playerLeft: 'вышел из игры',
         thisMove: 'Этот ход:',
         points: 'очков',
-        you: 'Вы'
+        you: 'Вы',
+        errNoTiles: 'Фишки не размещены',
+        errSameLine: 'Фишки должны быть в одном ряду или столбце',
+        errContinuous: 'Фишки должны быть без разрывов',
+        errLineTooLong: 'Линия не может быть длиннее 6',
+        errLineShareAttr: 'Линия должна иметь общий цвет или форму',
+        errDupShape: 'Повтор фишек - одинаковый цвет требует разные формы',
+        errDupColor: 'Повтор фишек - одинаковая форма требует разные цвета',
+        errMustConnect: 'Необходимо соединить с существующими фишками'
       }
     };
 
@@ -697,7 +713,7 @@
     }
 
     function validatePlacement(placements, board) {
-      if (placements.length === 0) return { valid: false, reason: 'No tiles placed' };
+      if (placements.length === 0) return { valid: false, reason: 'errNoTiles' };
 
       // Ensure board is an object, even if it's undefined/null
       board = board || {};
@@ -710,20 +726,20 @@
       const sameRow = rows.every(r => r === rows[0]);
       const sameCol = cols.every(c => c === cols[0]);
 
-      if (!sameRow && !sameCol) return { valid: false, reason: 'Tiles must be in same row or column' };
+      if (!sameRow && !sameCol) return { valid: false, reason: 'errSameLine' };
 
       if (sameRow) {
         const sortedCols = [...cols].sort((a, b) => a - b);
         for (let i = 0; i < sortedCols.length - 1; i++) {
           for (let c = sortedCols[i] + 1; c < sortedCols[i + 1]; c++) {
-            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: 'Tiles must be continuous' };
+            if (!newBoard[`${rows[0]},${c}`]) return { valid: false, reason: 'errContinuous' };
           }
         }
       } else {
         const sortedRows = [...rows].sort((a, b) => a - b);
         for (let i = 0; i < sortedRows.length - 1; i++) {
           for (let r = sortedRows[i] + 1; r < sortedRows[i + 1]; r++) {
-            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: 'Tiles must be continuous' };
+            if (!newBoard[`${r},${cols[0]}`]) return { valid: false, reason: 'errContinuous' };
           }
         }
       }
@@ -813,7 +829,7 @@
         
         // Validate each contiguous segment
         for (const tiles of segments) {
-          if (tiles.length > 6) return { valid: false, reason: 'Line cannot be longer than 6' };
+          if (tiles.length > 6) return { valid: false, reason: 'errLineTooLong' };
 
           if (tiles.length > 1) {
             const colors = tiles.map(t => t.color);
@@ -827,19 +843,19 @@
             // Must be either all same color OR all same shape
             if (!allSameColor && !allSameShape) {
               console.log('Line validation failed - mixed attributes:', { colors, shapes, line });
-              return { valid: false, reason: 'Line must share color or shape' };
+              return { valid: false, reason: 'errLineShareAttr' };
             }
             
             // If all same color, all shapes must be different (no duplicate shapes)
             if (allSameColor && uniqueShapes.size !== tiles.length) {
               console.log('Duplicate shapes detected in line', line, ':', shapes);
-              return { valid: false, reason: 'Duplicate tiles - same color requires different shapes' };
+              return { valid: false, reason: 'errDupShape' };
             }
             
             // If all same shape, all colors must be different (no duplicate colors)
             if (allSameShape && uniqueColors.size !== tiles.length) {
               console.log('Duplicate colors detected in line', line, ':', colors);
-              return { valid: false, reason: 'Duplicate tiles - same shape requires different colors' };
+              return { valid: false, reason: 'errDupColor' };
             }
           }
         }
@@ -861,7 +877,7 @@
         }
       }
 
-      if (!connected) return { valid: false, reason: 'Must connect to existing tiles' };
+      if (!connected) return { valid: false, reason: 'errMustConnect' };
       return { valid: true, score: calculateScore(placements, newBoard).score };
     }
 
@@ -1046,7 +1062,7 @@
         const validation = validatePlacement(state.pendingPlacements, currentBoard);
         
         if (!validation.valid) { 
-          alert(validation.reason); 
+          alert(t(validation.reason)); 
           return; 
         }
 
@@ -1588,7 +1604,7 @@
                   scoreValueEl.textContent = '✗';
                   scoreValueEl.style.opacity = '1';
                   scoreValueEl.style.color = '#ff6b6b';
-                  scoreMessageEl.textContent = validation.reason;
+                  scoreMessageEl.textContent = t(validation.reason);
                   scoreMessageEl.style.opacity = '1';
                   scoreMessageEl.style.color = '#ff6b6b';
                 } else {
