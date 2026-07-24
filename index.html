@@ -219,6 +219,7 @@
       pendingPlacements: [],
       draggedTile: null,
       tileToPlace: null,  // For click-to-place mode
+      myHand: [],
       language: localStorage.getItem('qwirkleLanguage') || 'en',
       reconnecting: false
     };
@@ -399,7 +400,7 @@
         const newGameId = newGameRef.key;
         
         await newGameRef.set({
-          players: { [newPlayerId]: { name: state.playerName, hand: player1Hand, score: 0, order: 0 } },
+          players: { [newPlayerId]: { name: state.playerName, score: 0, order: 0 } },
           deck: deck,
           board: {},
           currentPlayerIndex: 0,
@@ -408,6 +409,8 @@
           createdAt: Date.now(),
           lastMove: null
         });
+
+        await db.ref(`hands/${newGameId}/${newPlayerId}`).set(player1Hand);
 
         state.gameId = newGameId;
         
@@ -454,10 +457,11 @@
         
         await db.ref(`games/${state.gameId}/players/${newPlayerId}`).set({
           name: state.playerName,
-          hand: newHand,
           score: 0,
           order: Object.keys(game.players).length
         });
+
+        await db.ref(`hands/${state.gameId}/${newPlayerId}`).set(newHand);
         
         await db.ref(`games/${state.gameId}/deck`).set(deck);
         await db.ref(`games/${state.gameId}/playerOrder/${Object.keys(game.players).length}`).set(newPlayerId);
@@ -500,11 +504,11 @@
           const game = snapshot.val();
           
           if (game && game.players[playerId]) {
-            const leavingPlayer = game.players[playerId];
             const playerIndex = game.playerOrder.indexOf(playerId);
             
             // Return player's tiles to the deck
-            const playerHand = leavingPlayer.hand || [];
+            const handSnap = await db.ref(`hands/${gameId}/${playerId}`).once('value');
+            const playerHand = handSnap.val() || [];
             const newDeck = [...game.deck, ...playerHand];
             
             // Shuffle the deck
@@ -546,6 +550,7 @@
             
             // Update the game in Firebase
             await db.ref(`games/${gameId}`).update(updates);
+            await db.ref(`hands/${gameId}/${playerId}`).remove();
           }
         }
       } catch (error) {
@@ -556,6 +561,7 @@
       // Stop listening to the current game
       if (state.gameId) {
         db.ref(`games/${state.gameId}`).off();
+        db.ref(`hands/${state.gameId}/${state.playerId}`).off();
       }
 
       // Clear all local game state
@@ -567,6 +573,7 @@
       state.pendingPlacements = [];
       state.draggedTile = null;
       state.tileToPlace = null;
+      state.myHand = [];
       state.screen = 'menu';
 
       // Clear localStorage
@@ -637,6 +644,11 @@
     }
 
     function listenToGame() {
+      db.ref(`hands/${state.gameId}/${state.playerId}`).on('value', (snapshot) => {
+        state.myHand = snapshot.val() || [];
+        render();
+      });
+
       db.ref(`games/${state.gameId}`).on('value', (snapshot) => {
         if (!snapshot.exists()) {
           alert('Game no longer exists');
@@ -1026,7 +1038,7 @@
         });
 
         const currentPlayer = state.gameState.players[state.playerId];
-        const newHand = currentPlayer.hand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
+        const newHand = state.myHand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
 
         let newDeck = [...state.gameState.deck];
         const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
@@ -1046,7 +1058,6 @@
         const updates = {
           board: newBoard,
           deck: newDeck,
-          [`players/${state.playerId}/hand`]: newHand,
           [`players/${state.playerId}/score`]: newScore,
           currentPlayerIndex: nextPlayerIndex,
           lastMove: lastMove
@@ -1058,6 +1069,7 @@
         }
 
         await db.ref(`games/${state.gameId}`).update(updates);
+        await db.ref(`hands/${state.gameId}/${state.playerId}`).set(newHand);
         
         state.pendingPlacements = [];
         state.selectedTiles = [];
@@ -1076,8 +1088,7 @@
       }
 
       try {
-        const currentPlayer = state.gameState.players[state.playerId];
-        const newHand = currentPlayer.hand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
+        const newHand = state.myHand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
 
         let newDeck = [...state.gameState.deck];
         const drawn = newDeck.splice(0, state.selectedTiles.length);
@@ -1089,10 +1100,10 @@
 
         await db.ref(`games/${state.gameId}`).update({
           deck: newDeck,
-          [`players/${state.playerId}/hand`]: newHand,
           currentPlayerIndex: nextPlayerIndex,
           lastMove: null
         });
+        await db.ref(`hands/${state.gameId}/${state.playerId}`).set(newHand);
 
         state.selectedTiles = [];
         state.tileToPlace = null;
@@ -1431,14 +1442,14 @@
         }
         console.log('Board created');
 
-        console.log('Creating hand with', currentPlayer.hand ? currentPlayer.hand.length : 0, 'tiles');
+        console.log('Creating hand with', state.myHand ? state.myHand.length : 0, 'tiles');
         const handDiv = document.getElementById('hand');
         if (!handDiv) {
           console.error('Hand div not found!');
           return;
         }
-        if (currentPlayer.hand && Array.isArray(currentPlayer.hand)) {
-          currentPlayer.hand.forEach(tile => {
+        if (state.myHand && Array.isArray(state.myHand)) {
+          state.myHand.forEach(tile => {
             const isSelectedForSwap = state.selectedTiles.find(t => t.id === tile.id);
             const isSelectedForPlacement = state.tileToPlace && state.tileToPlace.id === tile.id;
             const isAlreadyPlaced = state.pendingPlacements.find(p => p.tile.id === tile.id);
