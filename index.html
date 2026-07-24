@@ -1218,6 +1218,11 @@
         const playerCount = Object.keys(state.gameState.players).length;
 
         app.innerHTML = `
+          <div style="text-align: right; margin-bottom: 10px;">
+            <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer;">
+              ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
+            </button>
+          </div>
           <h1 style="text-align: center;">${t('gameLobby')}</h1>
           <div class="game-id">
             <strong>${t('gameId')}:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
@@ -1286,8 +1291,13 @@
         app.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1>${t('title')}</h1>
-            <div style="background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">
-              <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">
+                <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}
+              </div>
+              <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer; margin-bottom: 0;">
+                ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
+              </button>
             </div>
           </div>
           <div id="scores" style="margin-bottom: 20px;"></div>
