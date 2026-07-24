@@ -1085,13 +1085,13 @@
         const currentPlayer = state.gameState.players[state.playerId];
         const newHand = state.myHand.filter(t => !state.pendingPlacements.find(p => p.tile.id === t.id));
 
-        let newDeck = [...state.gameState.deck];
+        let newDeck = [...(state.gameState.deck || [])];
         const tilesToDraw = Math.min(state.pendingPlacements.length, newDeck.length);
         const drawnTiles = newDeck.splice(0, tilesToDraw);
         newHand.push(...drawnTiles);
 
         const newScore = currentPlayer.score + validation.score;
-        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % (state.gameState.playerOrder || []).length;
 
         // Store last move information for highlighting
         const lastMove = {
@@ -1131,7 +1131,7 @@
     }
 
     async function swapTiles() {
-      if (state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length) {
+      if (state.selectedTiles.length === 0 || (state.gameState.deck || []).length < state.selectedTiles.length) {
         alert('Cannot swap - not enough tiles in bag');
         return;
       }
@@ -1139,13 +1139,13 @@
       try {
         const newHand = state.myHand.filter(t => !state.selectedTiles.find(s => s.id === t.id));
 
-        let newDeck = [...state.gameState.deck];
+        let newDeck = [...(state.gameState.deck || [])];
         const drawn = newDeck.splice(0, state.selectedTiles.length);
         newHand.push(...drawn);
         newDeck.push(...state.selectedTiles);
         newDeck.sort(() => Math.random() - 0.5);
 
-        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
+        const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % (state.gameState.playerOrder || []).length;
 
         await db.ref().update({
           [`games/${state.gameId}/deck`]: newDeck,
@@ -1237,7 +1237,7 @@
         setTimeout(() => document.getElementById('nameInput')?.focus(), 100);
       }
       else if (state.screen === 'lobby' && state.gameState) {
-        const isHost = state.gameState.playerOrder[0] === state.playerId;
+        const isHost = (state.gameState.playerOrder || [])[0] === state.playerId;
         const playerCount = Object.keys(state.gameState.players).length;
 
         app.innerHTML = `
@@ -1263,7 +1263,7 @@
           const div = document.createElement('div');
           div.className = 'player-card';
           div.style.background = '#ecf0f1';
-          div.textContent = `${player.name}${id === state.playerId ? ` (${t('you')})` : ''}${id === state.gameState.playerOrder[0] ? ' 👑' : ''}`;
+          div.textContent = `${player.name}${id === state.playerId ? ` (${t('you')})` : ''}${id === (state.gameState.playerOrder || [])[0] ? ' 👑' : ''}`;
           playerList.appendChild(div);
         });
 
@@ -1303,8 +1303,8 @@
 
         minRow -= 2; maxRow += 2; minCol -= 2; maxCol += 2;
 
-        const isMyTurn = state.gameState.currentPlayerIndex === state.gameState.playerOrder.indexOf(state.playerId);
-        const currentTurnPlayerId = state.gameState.playerOrder[state.gameState.currentPlayerIndex];
+        const isMyTurn = state.gameState.currentPlayerIndex === (state.gameState.playerOrder || []).indexOf(state.playerId);
+        const currentTurnPlayerId = (state.gameState.playerOrder || [])[state.gameState.currentPlayerIndex];
         const currentTurnPlayer = state.gameState.players[currentTurnPlayerId];
         
         // If current turn player has left, this shouldn't happen but handle it gracefully
@@ -1316,7 +1316,7 @@
             <h1>${t('title')}</h1>
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">
-                <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${state.gameState.deck.length} ${t('tiles')}
+                <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${(state.gameState.deck || []).length} ${t('tiles')}
               </div>
               <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer; margin-bottom: 0;">
                 ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
@@ -1361,7 +1361,7 @@
             <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
               <button class="btn-green" id="playBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✓ ${t('playButton')} ${state.pendingPlacements.length} ${state.pendingPlacements.length === 1 ? t('tile') : t('tiles')}</button>
               <button class="btn-red" id="cancelBtn" ${state.pendingPlacements.length === 0 ? 'disabled' : ''}>✕ ${t('clearBoard')}</button>
-              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || state.gameState.deck.length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
+              <button class="btn-orange" id="swapBtn" ${state.selectedTiles.length === 0 || (state.gameState.deck || []).length < state.selectedTiles.length ? 'disabled' : ''}>🔄 ${t('swap')} ${state.selectedTiles.length > 0 ? state.selectedTiles.length + ' ' + (state.selectedTiles.length === 1 ? t('tile') : t('tiles')) : t('tiles')}</button>
             </div>
           ` : ''}
           <div style="margin-top: 20px;">
@@ -1387,7 +1387,7 @@
         playersContainer.style.flexWrap = 'wrap';
         playersContainer.style.gap = '10px';
         
-        state.gameState.playerOrder.forEach((pid, idx) => {
+        (state.gameState.playerOrder || []).forEach((pid, idx) => {
           const p = state.gameState.players[pid];
           
           // Skip if player has left (their data was removed)
