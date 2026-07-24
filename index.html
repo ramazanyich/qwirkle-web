@@ -590,9 +590,12 @@
               updates.status = 'finished';
             }
             
-            // Update the game in Firebase
-            await db.ref(`games/${gameId}`).update(updates);
-            await db.ref(`hands/${gameId}/${playerId}`).remove();
+            const rootUpdates = {};
+            Object.keys(updates).forEach(key => {
+              rootUpdates[`games/${gameId}/${key}`] = updates[key];
+            });
+            rootUpdates[`hands/${gameId}/${playerId}`] = null;
+            await db.ref().update(rootUpdates);
           }
         }
       } catch (error) {
@@ -1110,8 +1113,12 @@
           updates.status = 'finished';
         }
 
-        await db.ref(`games/${state.gameId}`).update(updates);
-        await db.ref(`hands/${state.gameId}/${state.playerId}`).set(newHand);
+        const rootUpdates = {};
+        Object.keys(updates).forEach(key => {
+          rootUpdates[`games/${state.gameId}/${key}`] = updates[key];
+        });
+        rootUpdates[`hands/${state.gameId}/${state.playerId}`] = newHand;
+        await db.ref().update(rootUpdates);
         
         state.pendingPlacements = [];
         state.selectedTiles = [];
@@ -1140,12 +1147,12 @@
 
         const nextPlayerIndex = (state.gameState.currentPlayerIndex + 1) % state.gameState.playerOrder.length;
 
-        await db.ref(`games/${state.gameId}`).update({
-          deck: newDeck,
-          currentPlayerIndex: nextPlayerIndex,
-          lastMove: null
+        await db.ref().update({
+          [`games/${state.gameId}/deck`]: newDeck,
+          [`games/${state.gameId}/currentPlayerIndex`]: nextPlayerIndex,
+          [`games/${state.gameId}/lastMove`]: null,
+          [`hands/${state.gameId}/${state.playerId}`]: newHand
         });
-        await db.ref(`hands/${state.gameId}/${state.playerId}`).set(newHand);
 
         state.selectedTiles = [];
         state.tileToPlace = null;
