@@ -314,7 +314,9 @@
         errLineShareAttr: 'Line must share color or shape',
         errDupShape: 'Duplicate tiles - same color requires different shapes',
         errDupColor: 'Duplicate tiles - same shape requires different colors',
-        errMustConnect: 'Must connect to existing tiles'
+        errMustConnect: 'Must connect to existing tiles',
+        copy: 'Copy Game ID',
+        copied: 'Copied!'
       },
       ru: {
         title: 'Qwirkle Онлайн',
@@ -379,7 +381,9 @@
         errLineShareAttr: 'Линия должна иметь общий цвет или форму',
         errDupShape: 'Повтор фишек - одинаковый цвет требует разные формы',
         errDupColor: 'Повтор фишек - одинаковая форма требует разные цвета',
-        errMustConnect: 'Необходимо соединить с существующими фишками'
+        errMustConnect: 'Необходимо соединить с существующими фишками',
+        copy: 'Копировать ID игры',
+        copied: 'Скопировано!'
       }
     };
 
@@ -392,6 +396,37 @@
       localStorage.setItem('qwirkleLanguage', state.language);
       render();
     }
+
+    async function copyGameId(btnId) {
+      const btn = document.getElementById(btnId);
+      const original = btn ? btn.textContent : null;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(state.gameId);
+        } else {
+          // Fallback for non-HTTPS / older mobile browsers
+          const ta = document.createElement('textarea');
+          ta.value = state.gameId;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+
+        if (btn) {
+          btn.textContent = `✓ ${t('copied')}`;
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        }
+      } catch (error) {
+        console.error('Copy failed:', error);
+        alert(state.gameId);
+      }
+    }
+    window.copyGameId = copyGameId;
 
     function generateGameId() {
       return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -1249,6 +1284,7 @@
           <h1 style="text-align: center;">${t('gameLobby')}</h1>
           <div class="game-id">
             <strong>${t('gameId')}:</strong> <span style="font-size: 24px; color: #2c3e50;">${state.gameId}</span>
+            <button id="copyIdLobby" onclick="copyGameId('copyIdLobby')" style="width: auto; padding: 6px 12px; background: #3498db; margin-left: 10px; margin-bottom: 0; font-size: 14px;">📋 ${t('copy')}</button>
             <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">${t('shareId')}</p>
           </div>
           <h3>${t('players')} (${playerCount}/4):</h3>
@@ -1316,7 +1352,9 @@
             <h1>${t('title')}</h1>
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">
-                <strong>${t('gameId')}:</strong> ${state.gameId} | <strong>${t('bag')}:</strong> ${(state.gameState.deck || []).length} ${t('tiles')}
+                <strong>${t('gameId')}:</strong> ${state.gameId}
+                <button id="copyIdGame" onclick="copyGameId('copyIdGame')" title="${t('copy')}" style="width: auto; padding: 4px 8px; background: #3498db; margin-left: 6px; margin-bottom: 0; font-size: 13px;">📋</button>
+                | <strong>${t('bag')}:</strong> ${(state.gameState.deck || []).length} ${t('tiles')}
               </div>
               <button onclick="toggleLanguage()" style="width: auto; padding: 8px 16px; background: #95a5a6; cursor: pointer; margin-bottom: 0;">
                 ${state.language === 'en' ? '🇷🇺 Русский' : '🇬🇧 English'}
